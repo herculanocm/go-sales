@@ -9,7 +9,10 @@ import (
 // Config armazena todas as configurações da aplicação.
 // As tags 'mapstructure' são usadas para o Viper mapear os valores para a struct.
 type Config struct {
-	AppEnv   string `mapstructure:"APP_ENV"`
+	AppEnv       string `mapstructure:"APP_ENV"`
+	AppAPIPrefix string `mapstructure:"APP_API_PREFIX"`
+	AppAPIPort   string `mapstructure:"APP_API_PORT"`
+
 	DBSchema string `mapstructure:"DEFAULT_SCHEMA"`
 	DBHost   string `mapstructure:"DB_HOST"`
 	DBUser   string `mapstructure:"DB_USER"`
@@ -51,7 +54,7 @@ func (c *Config) DSN() string {
 }
 
 func (c *Config) String() string {
-	return fmt.Sprintf("AppEnv: %s, DBSchema: %s, DBHost: %s, DBUser: %s, DBName: %s, DBPort: %s",
-		c.AppEnv, c.DBSchema, c.DBHost, c.DBUser, c.DBName, c.DBPort,
+	return fmt.Sprintf("AppEnv: %s, AppAPIPrefix: %s, AppAPIPort: %s, DBSchema: %s, DBHost: %s, DBUser: %s, DBName: %s, DBPort: %s",
+		c.AppEnv, c.AppAPIPrefix, c.AppAPIPort, c.DBSchema, c.DBHost, c.DBUser, c.DBName, c.DBPort,
 	)
 }

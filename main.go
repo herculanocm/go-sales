@@ -4,8 +4,10 @@ import (
 	"go-sales/internal/config"
 	"go-sales/internal/database"
 	"go-sales/internal/logger"
+	"go-sales/internal/router" // Importe o novo pacote
 	dlog "log"
 
+	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
 
@@ -38,5 +40,26 @@ func main() {
 	}
 	log.Info().Msg("Database migrated successfully.")
 
-	log.Info().Msg("Application started successfully.")
+	log.Info().Msg("Setting up Gin server...")
+	// Define o modo do Gin com base na configuração (ex: "release" para produção)
+	gin.SetMode(gin.ReleaseMode)
+	if cfg.AppEnv != "production" {
+		gin.SetMode(gin.DebugMode)
+	}
+
+	server := gin.Default() // Cria um router com middlewares padrão (logger, recovery)
+
+	// Agrupar rotas sob um prefixo
+	log.Info().Msgf("Setting up API routes with prefix: %s", cfg.AppAPIPrefix)
+	api := server.Group(cfg.AppAPIPrefix)
+
+	// --- REGISTRO DAS ROTAS MODULARES ---
+	// Passe o grupo de rotas e a conexão com o DB para a função de setup.
+	router.SetupUserRoutes(api, database.DB)
+
+	log.Info().Msgf("Server is starting on port %s...", cfg.AppAPIPort)
+	// Inicia o servidor
+	if err := server.Run(":" + cfg.AppAPIPort); err != nil {
+		log.Fatal().Err(err).Msg("Failed to start server")
+	}
 }
