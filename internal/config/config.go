@@ -44,7 +44,14 @@ func LoadConfig(path string) (*Config, error) {
 
 // DSN retorna a string de conexão com o banco de dados (Data Source Name).
 func (c *Config) DSN() string {
-	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		c.DBHost, c.DBUser, c.DBPass, c.DBName, c.DBPort,
+	// Adicionar "search_path" é a forma mais confiável de definir o schema padrão.
+	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable search_path=%s",
+		c.DBHost, c.DBUser, c.DBPass, c.DBName, c.DBPort, c.DBSchema,
+	)
+}
+
+func (c *Config) String() string {
+	return fmt.Sprintf("AppEnv: %s, DBSchema: %s, DBHost: %s, DBUser: %s, DBName: %s, DBPort: %s",
+		c.AppEnv, c.DBSchema, c.DBHost, c.DBUser, c.DBName, c.DBPort,
 	)
 }
