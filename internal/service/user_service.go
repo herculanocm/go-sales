@@ -13,12 +13,16 @@ import (
 
 // Erros de negócio específicos do serviço de usuário.
 var (
-	ErrEmailAlreadyExists = errors.New("email already in use")
+	ErrEmailAlreadyExists = errors.New("Email already in use")
+	EntityNotFound        = errors.New("Entity not found")
 )
 
 // UserService define a interface para a lógica de negócios do usuário.
 type UserServiceInterface interface {
 	Create(userDTO dto.CreateUserDTO) (*model.User, error)
+	Update(userDTO dto.CreateUserDTO, userID string) (*model.User, error)
+	Delete(userID string) error
+	FindByID(userID string) (*model.User, error)
 }
 
 // userService é a implementação concreta.
@@ -66,4 +70,67 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*model.User, error) {
 	// 5. Retornar o usuário criado (sem a senha).
 	newUser.Password = "" // Nunca retorne o hash da senha.
 	return newUser, nil
+}
+
+func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*model.User, error) {
+	// 1. Buscar o usuário existente.
+	existingUser, err := s.repo.FindByID(userID)
+	if err != nil {
+		// AQUI ESTÁ A TRADUÇÃO DO ERRO!
+		// Se o repositório retornou "record not found", o serviço retorna "EntityNotFound".
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, EntityNotFound
+		}
+		// Para qualquer outro erro do banco de dados, apenas repasse.
+		return nil, err
+	}
+
+	// A verificação de 'existingUser == nil' se torna redundante se o repositório
+	// já retorna gorm.ErrRecordNotFound, mas não custa manter por segurança.
+	if existingUser == nil {
+		return nil, EntityNotFound
+	}
+
+	// 2. Verificar se o novo email já está em uso por OUTRO usuário.
+	if userDTO.Email != existingUser.Email {
+		userWithNewEmail, err := s.repo.FindByEmail(userDTO.Email)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err // Erro de banco de dados
+		}
+		if userWithNewEmail != nil {
+			return nil, ErrEmailAlreadyExists
+		}
+	}
+
+	// 3. Atualizar os campos do usuário.
+	existingUser.Name = userDTO.Name
+	existingUser.Email = userDTO.Email // Atualiza o email
+	if userDTO.Password != "" {
+		// ... (lógica de hashear a senha) ...
+	}
+
+	// 4. Chamar o repositório para persistir as alterações.
+	if err := s.repo.Update(existingUser); err != nil {
+		return nil, err
+	}
+
+	// 5. Retornar o usuário atualizado.
+	existingUser.Password = ""
+	return existingUser, nil
+}
+
+func (s *userService) Delete(userID string) error {
+
+	err := s.repo.Delete(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return EntityNotFound // Retorne um erro específico se o usuário não for encontrado.
+		}
+		return err // Retorne outros erros do banco de dados.
+	}
+	return nil // Retorno nil indica sucesso na exclusão.
+}
+
+func (s *userService) FindByID(userID string) (*model.User, error) {
+	return s.repo.FindByID(userID)
 }

@@ -24,6 +24,6 @@ func SetupUserRoutes(router *gin.RouterGroup, db *gorm.DB) {
 
 	// 4. Definir as rotas para /users
 	router.POST("/users", middleware.ValidateDTO(&dto.CreateUserDTO{}), userHandler.Create)
-	// router.GET("/users/:id", userHandler.GetByID) // Exemplo para futuras rotas
-	// router.GET("/users", userHandler.GetAll)      // Exemplo para futuras rotas
+	router.PUT("/users/:id", middleware.ValidateUUID("id"), middleware.ValidateDTO(&dto.CreateUserDTO{}), userHandler.Update)
+	router.DELETE("/users/:id", middleware.ValidateUUID("id"), userHandler.Delete)
 }

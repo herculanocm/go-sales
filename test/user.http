@@ -1,7 +1,8 @@
-POST http://localhost:8081/api/v1/users
+PUT http://localhost:8081/api/v1/users/b121ce1f-c889-47b8-b655-53bd4ec1b78e
 Content-Type: application/json
 
 {
+	"id": "b121ce1f-c889-47b8-b655-53bd4ec1b78a",
 	"name": "Herculano cunha",
 	"email": "john.doe@example.com",
 	"password": "securepassword"
