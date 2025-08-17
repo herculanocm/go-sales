@@ -34,7 +34,7 @@ func main() {
 	log.Info().Msg("Database connection established successfully")
 
 	log.Info().Msg("Trying to migrate database...")
-	err = database.Migrate(database.DB)
+	err = database.Migrate(database.DB, cfg)
 	if err != nil {
 		log.Fatal().Msgf("Error migrating database: %v", err)
 	}

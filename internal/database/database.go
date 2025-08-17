@@ -25,9 +25,22 @@ func Connect(cfg *config.Config) error {
 	return nil
 }
 
-func Migrate(db *gorm.DB) error {
+func Migrate(db *gorm.DB, cfg *config.Config) error {
+	// Apenas executa a operação de apagar tabelas se a flag estiver explicitamente ativada.
+	// É uma camada extra de segurança para evitar acidentes em produção.
+	if cfg.DBRecreate && cfg.AppEnv != "production" {
+		log.Warn().Msg("DB_RECREATE is true. Dropping all tables...")
+		// Dropa as tabelas na ordem inversa para respeitar as chaves estrangeiras.
+		err := db.Migrator().DropTable(model.RegisteredModels...)
+		if err != nil {
+			log.Error().Err(err).Msg("Fail to drop tables")
+			return err
+		}
+		log.Info().Msg("Tables dropped successfully.")
+	}
 
 	// O GORM agora criará as tabelas no schema definido pelo search_path na DSN.
+	log.Info().Msg("Running database migrations...")
 	err := db.AutoMigrate(model.RegisteredModels...)
 	if err != nil {
 		log.Error().Err(err).Msg("Fail to migrate database")

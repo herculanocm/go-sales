@@ -13,12 +13,13 @@ type Config struct {
 	AppAPIPrefix string `mapstructure:"APP_API_PREFIX"`
 	AppAPIPort   string `mapstructure:"APP_API_PORT"`
 
-	DBSchema string `mapstructure:"DEFAULT_SCHEMA"`
-	DBHost   string `mapstructure:"DB_HOST"`
-	DBUser   string `mapstructure:"DB_USER"`
-	DBPass   string `mapstructure:"DB_PASS"`
-	DBName   string `mapstructure:"DB_NAME"`
-	DBPort   string `mapstructure:"DB_PORT"`
+	DBRecreate bool   `mapstructure:"DB_RECREATE"`
+	DBSchema   string `mapstructure:"DEFAULT_SCHEMA"`
+	DBHost     string `mapstructure:"DB_HOST"`
+	DBUser     string `mapstructure:"DB_USER"`
+	DBPass     string `mapstructure:"DB_PASS"`
+	DBName     string `mapstructure:"DB_NAME"`
+	DBPort     string `mapstructure:"DB_PORT"`
 }
 
 // LoadConfig lê a configuração e retorna uma instância de Config.
