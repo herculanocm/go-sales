@@ -47,7 +47,17 @@ func main() {
 		gin.SetMode(gin.DebugMode)
 	}
 
-	server := gin.Default() // Cria um router com middlewares padrão (logger, recovery)
+	//server := gin.Default() // Cria um router com middlewares padrão (logger, recovery)
+
+	// Use gin.New() para um controle explícito dos middlewares.
+	server := gin.New()
+
+	// Adicione seus middlewares customizados na ordem que devem executar.
+	// 1. Middleware de log estruturado (usando zerolog).
+	server.Use(logger.GinLogger()) // Você precisará criar esta função.
+
+	// 2. Middleware de recuperação de pânico customizado.
+	server.Use(logger.GinRecovery(true)) // Você precisará criar esta função.
 
 	// Agrupar rotas sob um prefixo
 	log.Info().Msgf("Setting up API routes with prefix: %s", cfg.AppAPIPrefix)
