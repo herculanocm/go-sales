@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"go-sales/internal/dto"
+	"go-sales/internal/mapper"
 	"go-sales/internal/service"
 	"net/http"
 
@@ -50,7 +51,7 @@ func (h *CompanyGlobalHandler) Create(c *gin.Context) {
 	}
 
 	// 4. Retornar Resposta de Sucesso
-	c.JSON(http.StatusCreated, createdCompany)
+	c.JSON(http.StatusCreated, mapper.MapToCompanyGlobalDTO(createdCompany))
 }
 
 // Update é o método do handler para atualizar uma empresa global.
@@ -88,7 +89,7 @@ func (h *CompanyGlobalHandler) Update(c *gin.Context) {
 	}
 
 	// 4. Retornar Resposta de Sucesso
-	c.JSON(http.StatusOK, updatedCompany)
+	c.JSON(http.StatusOK, mapper.MapToCompanyGlobalDTO(updatedCompany))
 }
 
 // Delete é o método do handler para apagar uma empresa global.
