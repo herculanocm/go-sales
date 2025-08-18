@@ -1,0 +1,8 @@
+POST http://localhost:8081/api/v1/company-globals
+Content-Type: application/json
+
+{
+	"name": "Company Default",
+	"cgc": "12345678000199",
+    "enabled": true
+}

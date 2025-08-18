@@ -10,6 +10,7 @@ func init() {
 	RegisteredModels = append(
 		RegisteredModels,
 		&User{},
+		&CompanyGlobal{},
 		// Adicione novos modelos aqui no futuro.
 		// Por exemplo: &Product{}, &Order{},
 	)

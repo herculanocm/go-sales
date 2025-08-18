@@ -66,6 +66,7 @@ func main() {
 	// --- REGISTRO DAS ROTAS MODULARES ---
 	// Passe o grupo de rotas e a conexão com o DB para a função de setup.
 	router.SetupUserRoutes(api, database.DB)
+	router.SetupCompanyGlobalRoutes(api, database.DB)
 
 	log.Info().Msgf("Server is starting on port %s...", cfg.AppAPIPort)
 	// Inicia o servidor
