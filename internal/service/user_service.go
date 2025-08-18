@@ -11,12 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// Erros de negócio específicos do serviço de usuário.
-var (
-	ErrEmailAlreadyExists = errors.New("Email already in use")
-	EntityNotFound        = errors.New("Entity not found")
-)
-
 // UserService define a interface para a lógica de negócios do usuário.
 type UserServiceInterface interface {
 	Create(userDTO dto.CreateUserDTO) (*model.User, error)
@@ -119,9 +113,9 @@ func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*model.U
 	return existingUser, nil
 }
 
-func (s *userService) Delete(userID string) error {
+func (s *userService) Delete(id string) error {
 
-	err := s.repo.Delete(userID)
+	err := s.repo.Delete(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return EntityNotFound // Retorne um erro específico se o usuário não for encontrado.
