@@ -112,3 +112,43 @@ func (h *CompanyGlobalHandler) Delete(c *gin.Context) {
 	// 4. Retornar Resposta de Sucesso
 	c.JSON(http.StatusNoContent, nil)
 }
+
+func (h *CompanyGlobalHandler) FindByCGC(c *gin.Context) {
+	cgcStr := c.Param("cgc")
+
+	company, err := h.service.FindByCGC(cgcStr)
+	if err != nil {
+		// 3. Tratar Erros da Camada de Serviço
+		if errors.Is(err, service.EntityNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Para qualquer outro erro, consideramos um erro interno do servidor.
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+		return
+	}
+
+	// 4. Retornar Resposta de Sucesso
+	c.JSON(http.StatusOK, mapper.MapToCompanyGlobalDTO(company))
+}
+
+func (h *CompanyGlobalHandler) FindByID(c *gin.Context) {
+	idStr := c.Param("id")
+
+	company, err := h.service.FindByID(idStr)
+	if err != nil {
+		// 3. Tratar Erros da Camada de Serviço
+		if errors.Is(err, service.EntityNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Para qualquer outro erro, consideramos um erro interno do servidor.
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+		return
+	}
+
+	// 4. Retornar Resposta de Sucesso
+	c.JSON(http.StatusOK, mapper.MapToCompanyGlobalDTO(company))
+}

@@ -37,3 +37,15 @@ func ValidateUUID(paramName string) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func ValidateCGC(paramName string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cgcStr := c.Param(paramName)
+		if !util.IsValidCGC(cgcStr) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid " + paramName + " format. Must be a valid CGC."})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
