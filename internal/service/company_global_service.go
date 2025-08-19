@@ -19,6 +19,7 @@ type CompanyGlobalServiceInterface interface {
 	Delete(id string) error
 	FindByID(id string) (*model.CompanyGlobal, error)
 	FindByCGC(cgc string) (*model.CompanyGlobal, error)
+	FindAll(filters map[string][]string) ([]model.CompanyGlobal, error)
 }
 
 func NewCompanyGlobalService(repo database.CompanyGlobalRepositoryInterface) CompanyGlobalServiceInterface {
@@ -110,4 +111,9 @@ func (s *CompanyGlobalService) FindByID(id string) (*model.CompanyGlobal, error)
 
 func (s *CompanyGlobalService) FindByCGC(cgc string) (*model.CompanyGlobal, error) {
 	return s.repo.FindByCGC(cgc)
+}
+func (s *CompanyGlobalService) FindAll(filters map[string][]string) ([]model.CompanyGlobal, error) {
+	// O serviço simplesmente repassa os filtros para o repositório.
+	// Lógica de negócio mais complexa sobre os filtros poderia ser adicionada aqui se necessário.
+	return s.repo.FindAll(filters)
 }

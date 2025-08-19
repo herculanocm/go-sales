@@ -21,4 +21,5 @@ func SetupCompanyGlobalRoutes(router *gin.RouterGroup, db *gorm.DB) {
 	router.DELETE("/company-globals/:id", middleware.ValidateUUID("id"), handler.Delete)
 	router.GET("/company-globals/:id", middleware.ValidateUUID("id"), handler.FindByID)
 	// router.GET("/company-globals/:cgc", middleware.ValidateCGC("cgc"), handler.FindByCGC)
+	router.GET("/company-globals", handler.FindAll)
 }

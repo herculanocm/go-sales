@@ -152,3 +152,23 @@ func (h *CompanyGlobalHandler) FindByID(c *gin.Context) {
 	// 4. Retornar Resposta de Sucesso
 	c.JSON(http.StatusOK, mapper.MapToCompanyGlobalDTO(company))
 }
+
+func (h *CompanyGlobalHandler) FindAll(c *gin.Context) {
+	// Extrai todos os query params da URL para um mapa.
+	// Ex: /company-globals?name=Acme&enabled=true -> map["name":"Acme", "enabled":"true"]
+	filters := c.Request.URL.Query()
+
+	// 2. Chamar a Camada de Serviço, passando os filtros.
+	companies, err := h.service.FindAll(filters)
+	if err != nil {
+		// Para buscas, um erro geralmente é interno, a menos que um filtro seja inválido.
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred while fetching companies"})
+		return
+	}
+
+	// 3. Mapear a lista de modelos para uma lista de DTOs de resposta.
+	responseDTOs := mapper.MapToCompanyGlobalDTOs(companies)
+
+	// 4. Retornar a lista de DTOs.
+	c.JSON(http.StatusOK, responseDTOs)
+}

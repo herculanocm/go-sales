@@ -16,6 +16,7 @@ type CompanyGlobalRepositoryInterface interface {
 	FindByCGC(cgc string) (*model.CompanyGlobal, error)
 	Update(company *model.CompanyGlobal) error
 	Delete(id string) error
+	FindAll(filters map[string][]string) ([]model.CompanyGlobal, error)
 }
 
 func NewCompanyGlobalRepository(db *gorm.DB) CompanyGlobalRepositoryInterface {
@@ -64,4 +65,34 @@ func (r *CompanyGlobalRepository) Delete(id string) error {
 	}
 
 	return nil
+}
+func (r *CompanyGlobalRepository) FindAll(filters map[string][]string) ([]model.CompanyGlobal, error) {
+	var companies []model.CompanyGlobal
+	query := r.db
+
+	// Lista de colunas permitidas para filtragem para evitar injeção de SQL.
+	allowedFilters := map[string]bool{
+		"name":    true,
+		"cgc":     true,
+		"enabled": true,
+	}
+
+	for key, value := range filters {
+		// Verifica se o filtro é permitido e se tem um valor.
+		if allowed, ok := allowedFilters[key]; ok && allowed && len(value) > 0 {
+			// Para campos de texto, usamos 'LIKE' para buscas parciais.
+			// Para outros, usamos '=' para buscas exatas.
+			if key == "name" {
+				query = query.Where("name ILIKE ?", "%"+value[0]+"%") // ILIKE é case-insensitive (PostgreSQL)
+			} else {
+				query = query.Where(key+" = ?", value[0])
+			}
+		}
+	}
+
+	if err := query.Find(&companies).Error; err != nil {
+		return nil, err
+	}
+
+	return companies, nil
 }

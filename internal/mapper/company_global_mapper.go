@@ -25,3 +25,11 @@ func MapToCompanyGlobalDTO(company *model.CompanyGlobal) *dto.CompanyGlobalDTO {
 		DeletedAt:   deletedAt,
 	}
 }
+
+func MapToCompanyGlobalDTOs(companies []model.CompanyGlobal) *[]dto.CompanyGlobalDTO {
+	dtos := make([]dto.CompanyGlobalDTO, len(companies))
+	for i, company := range companies {
+		dtos[i] = *MapToCompanyGlobalDTO(&company)
+	}
+	return &dtos
+}
