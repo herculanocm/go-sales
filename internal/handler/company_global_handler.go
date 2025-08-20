@@ -2,6 +2,8 @@ package handler
 
 import (
 	"errors"
+	"fmt"
+	"go-sales/internal/config"
 	"go-sales/internal/dto"
 	"go-sales/internal/mapper"
 	"go-sales/internal/service"
@@ -13,11 +15,13 @@ import (
 
 type CompanyGlobalHandler struct {
 	service service.CompanyGlobalServiceInterface
+	cfg     *config.Config
 }
 
-func NewCompanyGlobalHandler(service service.CompanyGlobalServiceInterface) *CompanyGlobalHandler {
+func NewCompanyGlobalHandler(service service.CompanyGlobalServiceInterface, cfg *config.Config) *CompanyGlobalHandler {
 	return &CompanyGlobalHandler{
 		service: service,
+		cfg:     cfg,
 	}
 }
 
@@ -160,9 +164,9 @@ func (h *CompanyGlobalHandler) FindAll(c *gin.Context) {
 		page = 1
 	}
 
-	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", fmt.Sprintf("%d", h.cfg.AppDefaultAPIPageSize)))
 	if err != nil || pageSize < 1 {
-		pageSize = 10
+		pageSize = h.cfg.AppDefaultAPIPageSize
 	}
 
 	// 2. Extrai os filtros.

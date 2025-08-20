@@ -13,6 +13,8 @@ type Config struct {
 	AppAPIPrefix string `mapstructure:"APP_API_PREFIX"`
 	AppAPIPort   string `mapstructure:"APP_API_PORT"`
 
+	AppDefaultAPIPageSize int `mapstructure:"APP_DEFAULT_API_PAGE_SIZE"`
+
 	DBRecreate bool   `mapstructure:"DB_RECREATE"`
 	DBSchema   string `mapstructure:"DEFAULT_SCHEMA"`
 	DBHost     string `mapstructure:"DB_HOST"`

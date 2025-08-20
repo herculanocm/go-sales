@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"go-sales/internal/config"
 	"go-sales/internal/dto"
 	"go-sales/internal/service"
 	"net/http"
@@ -12,12 +13,14 @@ import (
 // UserHandler encapsula a dependência do serviço de usuário.
 type UserHandler struct {
 	service service.UserServiceInterface
+	cfg     *config.Config
 }
 
 // NewUserHandler cria uma nova instância do nosso handler de usuário.
-func NewUserHandler(s service.UserServiceInterface) *UserHandler {
+func NewUserHandler(s service.UserServiceInterface, cfg *config.Config) *UserHandler {
 	return &UserHandler{
 		service: s,
+		cfg:     cfg,
 	}
 }
 

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"go-sales/internal/config"
 	"go-sales/internal/database"
 	"go-sales/internal/dto"
 	"go-sales/internal/handler"
@@ -12,7 +13,7 @@ import (
 )
 
 // SetupUserRoutes encapsula a configuração das rotas de usuário.
-func SetupUserRoutes(router *gin.RouterGroup, db *gorm.DB) {
+func SetupUserRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	// 1. Inicializar o Repositório
 	userRepo := database.NewUserRepository(db)
 
@@ -20,7 +21,7 @@ func SetupUserRoutes(router *gin.RouterGroup, db *gorm.DB) {
 	userService := service.NewUserService(userRepo)
 
 	// 3. Inicializar o Handler
-	userHandler := handler.NewUserHandler(userService)
+	userHandler := handler.NewUserHandler(userService, cfg)
 
 	// 4. Definir as rotas para /users
 	router.POST("/users", middleware.ValidateDTO(&dto.CreateUserDTO{}), userHandler.Create)

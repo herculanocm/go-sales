@@ -13,7 +13,7 @@ import (
 
 func main() {
 	dlog.Println("Starting application...")
-	// 1. Carregue a configuração PRIMEIRO.
+
 	cfg, err := config.LoadConfig(".")
 	if err != nil {
 		// Se a configuração falhar, não temos nosso logger zerolog ainda.
@@ -65,8 +65,8 @@ func main() {
 
 	// --- REGISTRO DAS ROTAS MODULARES ---
 	// Passe o grupo de rotas e a conexão com o DB para a função de setup.
-	router.SetupUserRoutes(api, database.DB)
-	router.SetupCompanyGlobalRoutes(api, database.DB)
+	router.SetupUserRoutes(api, database.DB, cfg)
+	router.SetupCompanyGlobalRoutes(api, database.DB, cfg)
 
 	log.Info().Msgf("Server is starting on port %s...", cfg.AppAPIPort)
 	// Inicia o servidor
