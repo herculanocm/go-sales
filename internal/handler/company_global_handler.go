@@ -6,6 +6,7 @@ import (
 	"go-sales/internal/mapper"
 	"go-sales/internal/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -154,21 +155,27 @@ func (h *CompanyGlobalHandler) FindByID(c *gin.Context) {
 }
 
 func (h *CompanyGlobalHandler) FindAll(c *gin.Context) {
-	// Extrai todos os query params da URL para um mapa.
-	// Ex: /company-globals?name=Acme&enabled=true -> map["name":"Acme", "enabled":"true"]
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	// 2. Extrai os filtros.
 	filters := c.Request.URL.Query()
 
 	// 2. Chamar a Camada de Serviço, passando os filtros.
-	companies, err := h.service.FindAll(filters)
+	// 3. Chama o serviço.
+	paginatedResult, err := h.service.FindAll(filters, page, pageSize)
 	if err != nil {
-		// Para buscas, um erro geralmente é interno, a menos que um filtro seja inválido.
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred while fetching companies"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
 		return
 	}
 
-	// 3. Mapear a lista de modelos para uma lista de DTOs de resposta.
-	responseDTOs := mapper.MapToCompanyGlobalDTOs(companies)
-
-	// 4. Retornar a lista de DTOs.
-	c.JSON(http.StatusOK, responseDTOs)
+	// 4. Retorna o resultado paginado.
+	c.JSON(http.StatusOK, paginatedResult)
 }

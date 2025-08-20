@@ -4,8 +4,10 @@ import (
 	"errors"
 	"go-sales/internal/database"
 	"go-sales/internal/dto"
+	"go-sales/internal/mapper"
 	"go-sales/internal/model"
 	"go-sales/pkg/util"
+	"math"
 
 	"gorm.io/gorm"
 )
@@ -19,7 +21,7 @@ type CompanyGlobalServiceInterface interface {
 	Delete(id string) error
 	FindByID(id string) (*model.CompanyGlobal, error)
 	FindByCGC(cgc string) (*model.CompanyGlobal, error)
-	FindAll(filters map[string][]string) ([]model.CompanyGlobal, error)
+	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.CompanyGlobalDTO], error)
 }
 
 func NewCompanyGlobalService(repo database.CompanyGlobalRepositoryInterface) CompanyGlobalServiceInterface {
@@ -112,8 +114,31 @@ func (s *CompanyGlobalService) FindByID(id string) (*model.CompanyGlobal, error)
 func (s *CompanyGlobalService) FindByCGC(cgc string) (*model.CompanyGlobal, error) {
 	return s.repo.FindByCGC(cgc)
 }
-func (s *CompanyGlobalService) FindAll(filters map[string][]string) ([]model.CompanyGlobal, error) {
-	// O serviço simplesmente repassa os filtros para o repositório.
-	// Lógica de negócio mais complexa sobre os filtros poderia ser adicionada aqui se necessário.
-	return s.repo.FindAll(filters)
+
+// ...
+func (s *CompanyGlobalService) FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.CompanyGlobalDTO], error) {
+	companies, totalItems, err := s.repo.FindAll(filters, page, pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	companyDTOs := mapper.MapToCompanyGlobalDTOs(companies)
+
+	totalPages := 0
+	if pageSize > 0 {
+		totalPages = int(math.Ceil(float64(totalItems) / float64(pageSize)))
+	}
+
+	// Instancia a struct genérica, especificando que T é dto.CompanyGlobalDTO.
+	paginatedResponse := &dto.PaginatedResponse[dto.CompanyGlobalDTO]{
+		Items: *companyDTOs,
+		PageInfo: dto.PageInfo{
+			Page:       page,
+			PageSize:   pageSize,
+			TotalItems: totalItems,
+			TotalPages: totalPages,
+		},
+	}
+
+	return paginatedResponse, nil
 }

@@ -16,7 +16,7 @@ type CompanyGlobalRepositoryInterface interface {
 	FindByCGC(cgc string) (*model.CompanyGlobal, error)
 	Update(company *model.CompanyGlobal) error
 	Delete(id string) error
-	FindAll(filters map[string][]string) ([]model.CompanyGlobal, error)
+	FindAll(filters map[string][]string, page, pageSize int) ([]model.CompanyGlobal, int64, error)
 }
 
 func NewCompanyGlobalRepository(db *gorm.DB) CompanyGlobalRepositoryInterface {
@@ -66,9 +66,10 @@ func (r *CompanyGlobalRepository) Delete(id string) error {
 
 	return nil
 }
-func (r *CompanyGlobalRepository) FindAll(filters map[string][]string) ([]model.CompanyGlobal, error) {
+func (r *CompanyGlobalRepository) FindAll(filters map[string][]string, page, pageSize int) ([]model.CompanyGlobal, int64, error) {
 	var companies []model.CompanyGlobal
-	query := r.db
+	var totalItems int64
+	query := r.db.Model(&model.CompanyGlobal{})
 
 	// Lista de colunas permitidas para filtragem para evitar injeção de SQL.
 	allowedFilters := map[string]bool{
@@ -90,9 +91,18 @@ func (r *CompanyGlobalRepository) FindAll(filters map[string][]string) ([]model.
 		}
 	}
 
-	if err := query.Find(&companies).Error; err != nil {
-		return nil, err
+	// 1. Faz a contagem do total de itens que correspondem ao filtro, ANTES de aplicar limit/offset.
+	if err := query.Count(&totalItems).Error; err != nil {
+		return nil, 0, err
 	}
 
-	return companies, nil
+	// 2. Calcula o offset para a paginação.
+	offset := (page - 1) * pageSize
+
+	// 3. Aplica a paginação (limit e offset) e busca os itens da página.
+	if err := query.Offset(offset).Limit(pageSize).Find(&companies).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return companies, totalItems, nil
 }
