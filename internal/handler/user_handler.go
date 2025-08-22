@@ -44,7 +44,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 	if err != nil {
 		// 3. Tratar Erros da Camada de Serviço
 		// Verifica se o erro é um erro de negócio conhecido (email duplicado).
-		if errors.Is(err, service.ErrEmailAlreadyExists) {
+		if errors.Is(err, service.ErrEmailInUse) {
 			// Retorna um erro 409 (Conflict).
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
@@ -79,11 +79,11 @@ func (h *UserHandler) Update(c *gin.Context) {
 	updatedUser, err := h.service.Update(*updateUserDTO, idStr)
 	if err != nil {
 		// 3. Tratar Erros da Camada de Serviço
-		if errors.Is(err, service.EntityNotFound) {
+		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		if errors.Is(err, service.ErrEmailAlreadyExists) {
+		if errors.Is(err, service.ErrEmailInUse) {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
 		}
@@ -104,7 +104,7 @@ func (h *UserHandler) Delete(c *gin.Context) {
 	if err := h.service.Delete(idStr); err != nil {
 		// 3. Tratar Erros da Camada de Serviço
 		// Verifica se o erro é o nosso erro de "não encontrado".
-		if errors.Is(err, service.EntityNotFound) {
+		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}

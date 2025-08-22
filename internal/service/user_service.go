@@ -39,7 +39,7 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*model.User, error) {
 		return nil, err
 	}
 	if existingUser != nil {
-		return nil, ErrEmailAlreadyExists
+		return nil, ErrEmailInUse
 	}
 
 	// 2. Hashear a senha (lógica de negócio de segurança).
@@ -71,9 +71,9 @@ func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*model.U
 	existingUser, err := s.repo.FindByID(userID)
 	if err != nil {
 		// AQUI ESTÁ A TRADUÇÃO DO ERRO!
-		// Se o repositório retornou "record not found", o serviço retorna "EntityNotFound".
+		// Se o repositório retornou "record not found", o serviço retorna "ErrNotFound".
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, EntityNotFound
+			return nil, ErrNotFound
 		}
 		// Para qualquer outro erro do banco de dados, apenas repasse.
 		return nil, err
@@ -82,7 +82,7 @@ func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*model.U
 	// A verificação de 'existingUser == nil' se torna redundante se o repositório
 	// já retorna gorm.ErrRecordNotFound, mas não custa manter por segurança.
 	if existingUser == nil {
-		return nil, EntityNotFound
+		return nil, ErrNotFound
 	}
 
 	// 2. Verificar se o novo email já está em uso por OUTRO usuário.
@@ -92,7 +92,7 @@ func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*model.U
 			return nil, err // Erro de banco de dados
 		}
 		if userWithNewEmail != nil {
-			return nil, ErrEmailAlreadyExists
+			return nil, ErrEmailInUse
 		}
 	}
 
@@ -118,7 +118,7 @@ func (s *userService) Delete(id string) error {
 	err := s.repo.Delete(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return EntityNotFound // Retorne um erro específico se o usuário não for encontrado.
+			return ErrNotFound // Retorne um erro específico se o usuário não for encontrado.
 		}
 		return err // Retorne outros erros do banco de dados.
 	}

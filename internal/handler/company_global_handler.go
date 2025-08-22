@@ -45,7 +45,7 @@ func (h *CompanyGlobalHandler) Create(c *gin.Context) {
 	if err != nil {
 		// 3. Tratar Erros da Camada de Serviço
 		// Verifica se o erro é um erro de negócio conhecido (CGC duplicado).
-		if errors.Is(err, service.ErrCGCAlreadyExists) {
+		if errors.Is(err, service.ErrCGCInUse) {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
 		}
@@ -79,11 +79,11 @@ func (h *CompanyGlobalHandler) Update(c *gin.Context) {
 	updatedCompany, err := h.service.Update(*updateCompanyDTO, idStr)
 	if err != nil {
 		// 3. Tratar Erros da Camada de Serviço
-		if errors.Is(err, service.EntityNotFound) {
+		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		if errors.Is(err, service.ErrCGCAlreadyExists) {
+		if errors.Is(err, service.ErrCGCInUse) {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
 		}
@@ -104,7 +104,7 @@ func (h *CompanyGlobalHandler) Delete(c *gin.Context) {
 	// 2. Chamar a Camada de Serviço
 	if err := h.service.Delete(idStr); err != nil {
 		// 3. Tratar Erros da Camada de Serviço
-		if errors.Is(err, service.EntityNotFound) {
+		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
@@ -124,7 +124,7 @@ func (h *CompanyGlobalHandler) FindByCGC(c *gin.Context) {
 	company, err := h.service.FindByCGC(cgcStr)
 	if err != nil {
 		// 3. Tratar Erros da Camada de Serviço
-		if errors.Is(err, service.EntityNotFound) {
+		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
@@ -144,7 +144,7 @@ func (h *CompanyGlobalHandler) FindByID(c *gin.Context) {
 	company, err := h.service.FindByID(idStr)
 	if err != nil {
 		// 3. Tratar Erros da Camada de Serviço
-		if errors.Is(err, service.EntityNotFound) {
+		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}

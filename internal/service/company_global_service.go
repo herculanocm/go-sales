@@ -37,7 +37,7 @@ func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*m
 		return nil, err
 	}
 	if existingCompany != nil {
-		return nil, ErrCGCAlreadyExists
+		return nil, ErrCGCInUse
 	}
 
 	// 2. Mapear o DTO para o modelo do banco de dados.
@@ -62,7 +62,7 @@ func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id 
 	existingCompany, err := s.repo.FindByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, EntityNotFound
+			return nil, ErrNotFound
 		}
 
 		return nil, err
@@ -75,7 +75,7 @@ func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id 
 			return nil, err
 		}
 		if otherCompany != nil {
-			return nil, ErrCGCAlreadyExists
+			return nil, ErrCGCInUse
 		}
 	}
 
@@ -100,7 +100,7 @@ func (s *CompanyGlobalService) Delete(id string) error {
 	err := s.repo.Delete(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return EntityNotFound
+			return ErrNotFound
 		}
 		return err
 	}
@@ -108,11 +108,28 @@ func (s *CompanyGlobalService) Delete(id string) error {
 }
 
 func (s *CompanyGlobalService) FindByID(id string) (*model.CompanyGlobal, error) {
-	return s.repo.FindByID(id)
+	company, err := s.repo.FindByID(id)
+	if err != nil {
+		// AQUI ESTÁ A CORREÇÃO:
+		// Traduzimos o erro da camada de banco de dados para um erro da camada de serviço.
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
+		// Para qualquer outro erro, nós o repassamos.
+		return nil, err
+	}
+	return company, nil
 }
 
 func (s *CompanyGlobalService) FindByCGC(cgc string) (*model.CompanyGlobal, error) {
-	return s.repo.FindByCGC(cgc)
+	company, err := s.repo.FindByCGC(cgc)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return company, nil
 }
 
 // ...
