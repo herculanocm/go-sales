@@ -4,7 +4,7 @@ import (
 	"go-sales/internal/config"
 	"go-sales/internal/database"
 	"go-sales/internal/logger"
-	"go-sales/internal/router" // Importe o novo pacote
+	"go-sales/internal/router"
 	dlog "log"
 
 	"github.com/gin-gonic/gin"

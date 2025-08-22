@@ -29,7 +29,7 @@ func NewUserRepository(db *gorm.DB) UserRepositoryInterface {
 func (r *userRepository) FindByEmail(email string) (*model.User, error) {
 	var user model.User
 	// Usamos First para retornar um erro gorm.ErrRecordNotFound se o usuário não for encontrado.
-	if err := r.db.Where("email_address = ?", email).First(&user).Error; err != nil {
+	if err := r.db.Preload("CompanyGlobal").Where("email_address = ?", email).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -47,7 +47,7 @@ func (r *userRepository) Update(user *model.User) error {
 
 func (r *userRepository) FindByID(id string) (*model.User, error) {
 	var user model.User
-	if err := r.db.Where("id = ?", id).First(&user).Error; err != nil {
+	if err := r.db.Preload("CompanyGlobal").Where("id = ?", id).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
