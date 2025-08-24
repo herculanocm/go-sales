@@ -15,13 +15,12 @@ type Config struct {
 
 	AppDefaultAPIPageSize int `mapstructure:"APP_DEFAULT_API_PAGE_SIZE"`
 
-	DBRecreate bool   `mapstructure:"DB_RECREATE"`
-	DBSchema   string `mapstructure:"DEFAULT_SCHEMA"`
-	DBHost     string `mapstructure:"DB_HOST"`
-	DBUser     string `mapstructure:"DB_USER"`
-	DBPass     string `mapstructure:"DB_PASS"`
-	DBName     string `mapstructure:"DB_NAME"`
-	DBPort     string `mapstructure:"DB_PORT"`
+	DBSchema string `mapstructure:"DEFAULT_SCHEMA"`
+	DBHost   string `mapstructure:"DB_HOST"`
+	DBUser   string `mapstructure:"DB_USER"`
+	DBPass   string `mapstructure:"DB_PASS"`
+	DBName   string `mapstructure:"DB_NAME"`
+	DBPort   string `mapstructure:"DB_PORT"`
 }
 
 // LoadConfig lê a configuração e retorna uma instância de Config.

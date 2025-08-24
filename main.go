@@ -33,13 +33,6 @@ func main() {
 	}
 	log.Info().Msg("Database connection established successfully")
 
-	log.Info().Msg("Trying to migrate database...")
-	err = database.Migrate(database.DB, cfg)
-	if err != nil {
-		log.Fatal().Msgf("Error migrating database: %v", err)
-	}
-	log.Info().Msg("Database migrated successfully.")
-
 	log.Info().Msg("Setting up Gin server...")
 	// Define o modo do Gin com base na configuração (ex: "release" para produção)
 	gin.SetMode(gin.ReleaseMode)

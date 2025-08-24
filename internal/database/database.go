@@ -2,7 +2,6 @@ package database
 
 import (
 	"go-sales/internal/config"
-	"go-sales/internal/model"
 
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
@@ -25,6 +24,7 @@ func Connect(cfg *config.Config) error {
 	return nil
 }
 
+/*
 func Migrate(db *gorm.DB, cfg *config.Config) error {
 	// Apenas executa a operação de apagar tabelas se a flag estiver explicitamente ativada.
 	// É uma camada extra de segurança para evitar acidentes em produção.
@@ -48,3 +48,4 @@ func Migrate(db *gorm.DB, cfg *config.Config) error {
 	}
 	return nil
 }
+*/
