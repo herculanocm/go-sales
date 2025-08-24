@@ -21,13 +21,14 @@ type UserServiceInterface interface {
 
 // userService é a implementação concreta.
 type userService struct {
-	repo database.UserRepositoryInterface
+	repo        database.UserRepositoryInterface
+	repoCompany database.CompanyGlobalRepositoryInterface
 }
 
 // NewUserService cria uma nova instância do serviço de usuário.
 // Ele recebe o repositório como uma dependência (Injeção de Dependência).
-func NewUserService(repo database.UserRepositoryInterface) UserServiceInterface {
-	return &userService{repo: repo}
+func NewUserService(repo database.UserRepositoryInterface, repoCompany database.CompanyGlobalRepositoryInterface) UserServiceInterface {
+	return &userService{repo: repo, repoCompany: repoCompany}
 }
 
 // Create contém a lógica de negócios para criar um novo usuário.
@@ -48,12 +49,22 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*model.User, error) {
 		return nil, err
 	}
 
+	existingCompanyGlobal, err := s.repoCompany.FindByID(userDTO.CompanyGlobalID.String())
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if existingCompanyGlobal == nil {
+		return nil, ErrCompanyGlobalNotFound
+	}
+
 	// 3. Mapear o DTO para o modelo do banco de dados.
 	newUser := &model.User{
-		ID:       util.New(), // O GORM pode gerar, mas é bom ser explícito.
-		Name:     userDTO.Name,
-		Email:    userDTO.Email,
-		Password: string(hashedPassword),
+		ID:              util.New(), // O GORM pode gerar, mas é bom ser explícito.
+		Name:            userDTO.Name,
+		Email:           userDTO.Email,
+		Password:        string(hashedPassword),
+		CompanyGlobalID: userDTO.CompanyGlobalID,
+		CompanyGlobal:   *existingCompanyGlobal,
 	}
 
 	// 4. Chamar o repositório para persistir o usuário.

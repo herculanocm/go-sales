@@ -5,6 +5,7 @@ import (
 	"go-sales/internal/database"
 	"go-sales/internal/logger"
 	"go-sales/internal/router"
+	"go-sales/internal/validator" // Importe o novo pacote validator
 	dlog "log"
 
 	"github.com/gin-gonic/gin"
@@ -34,6 +35,9 @@ func main() {
 	log.Info().Msg("Database connection established successfully")
 
 	log.Info().Msg("Setting up Gin server...")
+	// Inicializa o validador customizado ANTES de criar a instância do Gin.
+	validator.InitCustomValidator()
+
 	// Define o modo do Gin com base na configuração (ex: "release" para produção)
 	gin.SetMode(gin.ReleaseMode)
 	if cfg.AppEnv != "production" {

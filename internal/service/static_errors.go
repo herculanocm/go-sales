@@ -13,4 +13,6 @@ var (
 	ErrDuplicateKey = errors.New("a record with this key already exists")
 	// ErrForeignKeyConstraint é retornado ao tentar apagar um registro que é referenciado por outro.
 	ErrForeignKeyConstraint = errors.New("cannot delete this record because it is referenced by other records")
+
+	ErrCompanyGlobalNotFound = errors.New("company global not found")
 )

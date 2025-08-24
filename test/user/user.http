@@ -4,5 +4,6 @@ Content-Type: application/json
 {
 	"name": "Herculano cunha",
 	"email": "john.doe2@example.com",
-	"password": "securepassword"
+	"password": "securepassword",
+	"company_global_id": "b990812e-75f3-4dfa-8e26-8ef43a00f618"
 }
