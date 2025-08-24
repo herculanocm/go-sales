@@ -14,6 +14,7 @@ type UserRepositoryInterface interface {
 	Update(user *model.User) error
 	Delete(id string) error
 	AssociateRoles(user *model.User, roles []*model.Role) error
+	FindAll(filters map[string][]string, page, pageSize int) ([]model.User, int64, error)
 }
 
 // userRepository é a implementação concreta que usa o GORM.
@@ -30,7 +31,7 @@ func NewUserRepository(db *gorm.DB) UserRepositoryInterface {
 func (r *userRepository) FindByEmail(email string) (*model.User, error) {
 	var user model.User
 	// Usamos First para retornar um erro gorm.ErrRecordNotFound se o usuário não for encontrado.
-	if err := r.db.Preload("CompanyGlobal").Where("email_address = ?", email).First(&user).Error; err != nil {
+	if err := r.db.Preload("CompanyGlobal").Preload("Roles").Where("email_address = ?", email).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -48,7 +49,7 @@ func (r *userRepository) Update(user *model.User) error {
 
 func (r *userRepository) FindByID(id string) (*model.User, error) {
 	var user model.User
-	if err := r.db.Preload("CompanyGlobal").Where("id = ?", id).First(&user).Error; err != nil {
+	if err := r.db.Preload("CompanyGlobal").Preload("Roles").Where("id = ?", id).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -76,4 +77,43 @@ func (r *userRepository) AssociateRoles(user *model.User, roles []*model.Role) e
 	// O método Association("Roles") usa o nome do campo na struct User.
 	// Append adiciona as associações na tabela de junção.
 	return r.db.Model(user).Association("Roles").Append(roles)
+}
+
+func (r *userRepository) FindAll(filters map[string][]string, page, pageSize int) ([]model.User, int64, error) {
+	var users []model.User
+	var totalItems int64
+	query := r.db.Model(&model.User{}).Preload("CompanyGlobal").Preload("Roles")
+
+	allowedFilters := map[string]bool{
+		"name":    true,
+		"email":   true,
+		"enabled": true,
+	}
+
+	for key, value := range filters {
+		// Verifica se o filtro é permitido e se tem um valor.
+		if allowed, ok := allowedFilters[key]; ok && allowed && len(value) > 0 {
+			// Para campos de texto, usamos 'LIKE' para buscas parciais.
+			// Para outros, usamos '=' para buscas exatas.
+			if key == "name" {
+				query = query.Where("name ILIKE ?", "%"+value[0]+"%") // ILIKE é case-insensitive (PostgreSQL)
+			} else {
+				query = query.Where(key+" = ?", value[0])
+			}
+		}
+	}
+
+	// 1. Faz a contagem do total de itens que correspondem ao filtro, ANTES de aplicar limit/offset.
+	if err := query.Count(&totalItems).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// 2. Calcula o offset para a paginação.
+	offset := (page - 1) * pageSize
+
+	if err := query.Offset(offset).Limit(pageSize).Find(&users).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return users, totalItems, nil
 }

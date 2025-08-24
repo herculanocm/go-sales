@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"go-sales/pkg/util"
 	"time"
 )
 
@@ -12,7 +13,7 @@ type CreateCompanyGlobalDTO struct {
 }
 
 type CompanyGlobalDTO struct {
-	ID          string     `json:"id"`
+	ID          util.UUID  `json:"id"`
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
 	CGC         string     `json:"cgc"`

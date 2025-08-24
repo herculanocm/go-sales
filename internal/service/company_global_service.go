@@ -139,7 +139,12 @@ func (s *CompanyGlobalService) FindAll(filters map[string][]string, page, pageSi
 		return nil, err
 	}
 
-	companyDTOs := mapper.MapToCompanyGlobalDTOs(companies)
+	// Convert []model.CompanyGlobal to []*model.CompanyGlobal
+	companyPtrs := make([]*model.CompanyGlobal, len(companies))
+	for i := range companies {
+		companyPtrs[i] = &companies[i]
+	}
+	companyDTOs := mapper.MapToCompanyGlobalDTOs(companyPtrs)
 
 	totalPages := 0
 	if pageSize > 0 {

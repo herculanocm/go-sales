@@ -12,166 +12,127 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// UserHandler encapsula a dependência do serviço de usuário.
-type UserHandler struct {
-	service service.UserServiceInterface
+// PermissionHandler encapsula a dependência do serviço de permissões.
+type PermissionHandler struct {
+	service service.PermissionServiceInterface
 	cfg     *config.Config
 }
 
-// NewUserHandler cria uma nova instância do nosso handler de usuário.
-func NewUserHandler(s service.UserServiceInterface, cfg *config.Config) *UserHandler {
-	return &UserHandler{
+// NewPermissionHandler cria uma nova instância do handler de permissões.
+func NewPermissionHandler(s service.PermissionServiceInterface, cfg *config.Config) *PermissionHandler {
+	return &PermissionHandler{
 		service: s,
 		cfg:     cfg,
 	}
 }
 
-// Create é o método do handler para criar um novo usuário.
-func (h *UserHandler) Create(c *gin.Context) {
+// Create cria uma nova permissão.
+func (h *PermissionHandler) Create(c *gin.Context) {
 	validatedDTO, exists := c.Get("validatedDTO")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Validated DTO not found"})
 		return
 	}
 
-	// Faz a asserção de tipo
-	createUserDTO, ok := validatedDTO.(*dto.CreateUserDTO)
+	createPermissionDTO, ok := validatedDTO.(*dto.CreatePermissionDTO)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid DTO type"})
 		return
 	}
 
-	// 2. Chamar a Camada de Serviço
-	createdUser, err := h.service.Create(*createUserDTO)
+	createdPermission, err := h.service.Create(*createPermissionDTO)
 	if err != nil {
-		// 3. Tratar Erros da Camada de Serviço
-		// Verifica se o erro é um erro de negócio conhecido (email duplicado).
-		if errors.Is(err, service.ErrEmailInUse) {
-			// Retorna um erro 409 (Conflict).
+		if errors.Is(err, service.ErrPermissionNameInUse) {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
 		}
-
-		if errors.Is(err, service.ErrCompanyGlobalNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-		if errors.Is(err, service.ErrRoleNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Para qualquer outro erro, consideramos um erro interno do servidor.
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
-		return
-	}
-
-	// 4. Retornar Resposta de Sucesso
-	// Retorna o usuário criado com o status 201 (Created).
-	c.JSON(http.StatusCreated, createdUser)
-}
-
-func (h *UserHandler) Update(c *gin.Context) {
-	idStr := c.Param("id")
-	validatedDTO, exists := c.Get("validatedDTO")
-	if !exists {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Validated DTO not found"})
-		return
-	}
-
-	// Faz a asserção de tipo
-	updateUserDTO, ok := validatedDTO.(*dto.CreateUserDTO)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid DTO type"})
-		return
-	}
-
-	// 2. Chamar a Camada de Serviço
-	updatedUser, err := h.service.Update(*updateUserDTO, idStr)
-	if err != nil {
-		// 3. Tratar Erros da Camada de Serviço
 		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		if errors.Is(err, service.ErrEmailInUse) {
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Para qualquer outro erro não esperado, retorne um erro genérico.
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
 		return
 	}
 
-	// 4. Retornar Resposta de Sucesso
-	c.JSON(http.StatusOK, updatedUser)
+	c.JSON(http.StatusCreated, createdPermission)
 }
 
-func (h *UserHandler) Delete(c *gin.Context) {
+// Update atualiza uma permissão existente.
+func (h *PermissionHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
+	validatedDTO, exists := c.Get("validatedDTO")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Validated DTO not found"})
+		return
+	}
 
-	// 2. Chamar a Camada de Serviço
+	updatePermissionDTO, ok := validatedDTO.(*dto.CreatePermissionDTO)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid DTO type"})
+		return
+	}
+
+	updatedPermission, err := h.service.Update(*updatePermissionDTO, idStr)
+	if err != nil {
+		if errors.Is(err, service.ErrNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		if errors.Is(err, service.ErrPermissionNameInUse) {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+		return
+	}
+
+	c.JSON(http.StatusOK, updatedPermission)
+}
+
+// Delete remove uma permissão.
+func (h *PermissionHandler) Delete(c *gin.Context) {
+	idStr := c.Param("id")
 	if err := h.service.Delete(idStr); err != nil {
-		// 3. Tratar Erros da Camada de Serviço
-		// Verifica se o erro é o nosso erro de "não encontrado".
 		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-
-		// Para qualquer outro erro, consideramos um erro interno do servidor.
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
 		return
 	}
-
-	// 4. Retornar Resposta de Sucesso
 	c.JSON(http.StatusNoContent, nil)
 }
 
-func (h *UserHandler) FindAll(c *gin.Context) {
+// FindAll retorna todas as permissões paginadas.
+func (h *PermissionHandler) FindAll(c *gin.Context) {
 	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if err != nil || page < 1 {
 		page = 1
 	}
-
 	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", fmt.Sprintf("%d", h.cfg.AppDefaultAPIPageSize)))
 	if err != nil || pageSize < 1 {
 		pageSize = h.cfg.AppDefaultAPIPageSize
 	}
-
-	// 2. Extrai os filtros.
 	filters := c.Request.URL.Query()
-
-	// 2. Chamar a Camada de Serviço, passando os filtros.
-	// 3. Chama o serviço.
 	paginatedResult, err := h.service.FindAll(filters, page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
 		return
 	}
-
-	// 4. Retorna o resultado paginado.
 	c.JSON(http.StatusOK, paginatedResult)
 }
 
-func (h *UserHandler) FindByID(c *gin.Context) {
+// FindByID retorna uma permissão pelo ID.
+func (h *PermissionHandler) FindByID(c *gin.Context) {
 	idStr := c.Param("id")
-
-	// 2. Chamar a Camada de Serviço
-	user, err := h.service.FindByID(idStr)
+	permission, err := h.service.FindByID(idStr)
 	if err != nil {
-		// 3. Tratar Erros da Camada de Serviço
 		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-
-		// Para qualquer outro erro, consideramos um erro interno do servidor.
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
 		return
 	}
-
-	// 4. Retornar Resposta de Sucesso
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, permission)
 }

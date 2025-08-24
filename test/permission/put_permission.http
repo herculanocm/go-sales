@@ -1,0 +1,7 @@
+PUT http://localhost:8081/api/v1/permissions/2a3091a9-6e5a-4338-ae1e-2767a61db455
+Content-Type: application/json
+
+{
+	"name": "testee",
+    "description": "A description"
+}

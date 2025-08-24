@@ -3,7 +3,8 @@ Content-Type: application/json
 
 {
 	"name": "Herculano cunha",
-	"email": "john.doe2@example.com",
+	"email": "john.doe22@example.com",
 	"password": "securepassword",
-	"company_global_id": "b990812e-75f3-4dfa-8e26-8ef43a00f618"
+	"company_global_id": "f22d672e-0a7e-42d2-bc0e-e1bdbe9482f2",
+	"role_ids": ["48d5dd62-9b14-4d00-9cdb-00720971cd28", "36a8408c-1b1b-4231-97a3-86a15013ed90"]
 }

@@ -1,6 +1,9 @@
 package dto
 
-import "go-sales/pkg/util"
+import (
+	"go-sales/pkg/util"
+	"time"
+)
 
 type CreateUserDTO struct {
 	Name            string    `json:"name" binding:"required,min=2"`
@@ -13,9 +16,31 @@ type CreateUserDTO struct {
 	RoleIDs []util.UUID `json:"role_ids" binding:"required,dive,uuid"`
 }
 
+type RoleDTO struct {
+	ID            util.UUID        `json:"id"`
+	Name          string           `json:"name"`
+	Description   string           `json:"description"`
+	Permissions   []PermissionDTO  `json:"permissions"`
+	CompanyGlobal CompanyGlobalDTO `json:"company_global"`
+
+	CanEdit   bool `json:"can_edit"`
+	CanDelete bool `json:"can_delete"`
+	IsAdmin   bool `json:"is_admin"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	DeletedAt time.Time `json:"deleted_at"`
+}
+
 type UserDTO struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	ID            util.UUID        `json:"id"`
+	Name          string           `json:"name"`
+	Email         string           `json:"email"`
+	Password      string           `json:"password"`
+	Enabled       bool             `json:"enabled"`
+	CompanyGlobal CompanyGlobalDTO `json:"company_global"`
+	Roles         []RoleDTO        `json:"roles"`
+	CreatedAt     time.Time        `json:"created_at"`
+	UpdatedAt     time.Time        `json:"updated_at"`
+	DeletedAt     time.Time        `json:"deleted_at"`
 }

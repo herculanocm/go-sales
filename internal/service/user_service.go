@@ -4,8 +4,10 @@ import (
 	"errors"
 	"go-sales/internal/database"
 	"go-sales/internal/dto"
+	"go-sales/internal/mapper"
 	"go-sales/internal/model"
 	"go-sales/pkg/util"
+	"math"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -17,6 +19,7 @@ type UserServiceInterface interface {
 	Update(userDTO dto.CreateUserDTO, userID string) (*model.User, error)
 	Delete(userID string) error
 	FindByID(userID string) (*model.User, error)
+	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.UserDTO], error)
 }
 
 // userService é a implementação concreta.
@@ -52,7 +55,7 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*model.User, error) {
 
 	existingCompanyGlobal, err := s.repoCompany.FindByID(userDTO.CompanyGlobalID.String())
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
+		return nil, ErrCompanyGlobalNotFound
 	}
 	if existingCompanyGlobal == nil {
 		return nil, ErrCompanyGlobalNotFound
@@ -76,7 +79,6 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*model.User, error) {
 		Password:        string(hashedPassword),
 		CompanyGlobalID: userDTO.CompanyGlobalID,
 		CompanyGlobal:   *existingCompanyGlobal,
-		Roles:           roles,
 	}
 
 	// 4. Chamar o repositório para persistir o usuário.
@@ -158,4 +160,32 @@ func (s *userService) Delete(id string) error {
 
 func (s *userService) FindByID(userID string) (*model.User, error) {
 	return s.repo.FindByID(userID)
+}
+
+func (s *userService) FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.UserDTO], error) {
+	// 1. Chamar o repositório para buscar os usuários.
+	users, totalItems, err := s.repo.FindAll(filters, page, pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	userPtrs := make([]*model.User, len(users))
+	for i := range users {
+		userPtrs[i] = &users[i]
+	}
+	userDTOs := mapper.MapToUserDTOs(userPtrs)
+	totalPages := 0
+	if pageSize > 0 {
+		totalPages = int(math.Ceil(float64(totalItems) / float64(pageSize)))
+	}
+
+	return &dto.PaginatedResponse[dto.UserDTO]{
+		Items: *userDTOs,
+		PageInfo: dto.PageInfo{
+			Page:       page,
+			PageSize:   pageSize,
+			TotalItems: totalItems,
+			TotalPages: totalPages,
+		},
+	}, nil
 }

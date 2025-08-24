@@ -29,4 +29,6 @@ func SetupUserRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	router.POST("/users", middleware.ValidateDTO(&dto.CreateUserDTO{}), userHandler.Create)
 	router.PUT("/users/:id", middleware.ValidateUUID("id"), middleware.ValidateDTO(&dto.CreateUserDTO{}), userHandler.Update)
 	router.DELETE("/users/:id", middleware.ValidateUUID("id"), userHandler.Delete)
+	router.GET("/users/:id", middleware.ValidateUUID("id"), userHandler.FindByID)
+	router.GET("/users", userHandler.FindAll)
 }

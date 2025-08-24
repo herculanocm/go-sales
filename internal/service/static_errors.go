@@ -16,4 +16,5 @@ var (
 
 	ErrCompanyGlobalNotFound = errors.New("company global not found")
 	ErrRoleNotFound          = errors.New("role not found")
+	ErrPermissionNameInUse   = errors.New("permission name already in use")
 )

@@ -15,7 +15,7 @@ func MapToCompanyGlobalDTO(company *model.CompanyGlobal) *dto.CompanyGlobalDTO {
 	}
 
 	return &dto.CompanyGlobalDTO{
-		ID:          company.ID.String(),
+		ID:          company.ID,
 		Name:        company.Name,
 		Description: company.Description,
 		CGC:         company.CGC,
@@ -26,10 +26,15 @@ func MapToCompanyGlobalDTO(company *model.CompanyGlobal) *dto.CompanyGlobalDTO {
 	}
 }
 
-func MapToCompanyGlobalDTOs(companies []model.CompanyGlobal) *[]dto.CompanyGlobalDTO {
+func MapToCompanyGlobalDTOs(companies []*model.CompanyGlobal) *[]dto.CompanyGlobalDTO {
+	if companies == nil {
+		empty := make([]dto.CompanyGlobalDTO, 0)
+		return &empty
+	}
+
 	dtos := make([]dto.CompanyGlobalDTO, len(companies))
 	for i, company := range companies {
-		dtos[i] = *MapToCompanyGlobalDTO(&company)
+		dtos[i] = *MapToCompanyGlobalDTO(company)
 	}
 	return &dtos
 }

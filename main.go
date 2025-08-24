@@ -64,6 +64,7 @@ func main() {
 	// Passe o grupo de rotas e a conexão com o DB para a função de setup.
 	router.SetupUserRoutes(api, database.DB, cfg)
 	router.SetupCompanyGlobalRoutes(api, database.DB, cfg)
+	router.SetupPermissionRoutes(api, database.DB, cfg)
 
 	log.Info().Msgf("Server is starting on port %s...", cfg.AppAPIPort)
 	// Inicia o servidor

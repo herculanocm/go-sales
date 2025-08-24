@@ -1,9 +1,3 @@
--- +migrate Up
-
--- Garante que o schema 'master' exista antes de tentar criar a tabela nele.
--- 'IF NOT EXISTS' torna o script seguro para ser executado várias vezes.
-CREATE SCHEMA IF NOT EXISTS master;
-
 -- Cria a tabela dentro do schema 'master'.
 CREATE TABLE IF NOT EXISTS master.company_globals (
     id UUID NOT NULL,
