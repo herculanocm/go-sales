@@ -13,6 +13,7 @@ type UserRepositoryInterface interface {
 	Create(user *model.User) error
 	Update(user *model.User) error
 	Delete(id string) error
+	AssociateRoles(user *model.User, roles []*model.Role) error
 }
 
 // userRepository é a implementação concreta que usa o GORM.
@@ -69,4 +70,10 @@ func (r *userRepository) Delete(id string) error {
 	}
 
 	return nil
+}
+
+func (r *userRepository) AssociateRoles(user *model.User, roles []*model.Role) error {
+	// O método Association("Roles") usa o nome do campo na struct User.
+	// Append adiciona as associações na tabela de junção.
+	return r.db.Model(user).Association("Roles").Append(roles)
 }

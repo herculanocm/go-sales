@@ -74,6 +74,11 @@ The application uses an `.env` file for configuration.
 
 With the environment configured, you can now create the database schema by running the migrations.
 
+Create a new migration
+```bash
+migrate create -ext sql -dir internal/database/migrations -seq create_user_roles_table
+```
+
 The project includes a `Makefile` to simplify common commands.
 
 ```bash

@@ -1,5 +1,5 @@
 -- Cria a tabela dentro do schema 'master'.
-CREATE TABLE master.users (
+CREATE TABLE IF NOT EXISTS master.users (
     id UUID NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     email_address VARCHAR(255) NOT NULL,

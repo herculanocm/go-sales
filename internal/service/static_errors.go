@@ -15,4 +15,5 @@ var (
 	ErrForeignKeyConstraint = errors.New("cannot delete this record because it is referenced by other records")
 
 	ErrCompanyGlobalNotFound = errors.New("company global not found")
+	ErrRoleNotFound          = errors.New("role not found")
 )

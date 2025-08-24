@@ -23,6 +23,8 @@ type User struct {
 	// A tag `foreignKey` diz ao GORM qual campo nesta struct (`User`) usar para a junção.
 	CompanyGlobal CompanyGlobal `gorm:"foreignKey:CompanyGlobalID"`
 
+	Roles []*Role `gorm:"many2many:user_roles;"`
+
 	CreatedAt time.Time      `gorm:"column:created_at;type:timestamptz"`
 	UpdatedAt time.Time      `gorm:"column:updated_at;type:timestamptz"`
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;type:timestamptz"`

@@ -23,12 +23,13 @@ type UserServiceInterface interface {
 type userService struct {
 	repo        database.UserRepositoryInterface
 	repoCompany database.CompanyGlobalRepositoryInterface
+	repoRole    database.RoleRepositoryInterface
 }
 
 // NewUserService cria uma nova instância do serviço de usuário.
 // Ele recebe o repositório como uma dependência (Injeção de Dependência).
-func NewUserService(repo database.UserRepositoryInterface, repoCompany database.CompanyGlobalRepositoryInterface) UserServiceInterface {
-	return &userService{repo: repo, repoCompany: repoCompany}
+func NewUserService(repo database.UserRepositoryInterface, repoCompany database.CompanyGlobalRepositoryInterface, repoRole database.RoleRepositoryInterface) UserServiceInterface {
+	return &userService{repo: repo, repoCompany: repoCompany, repoRole: repoRole}
 }
 
 // Create contém a lógica de negócios para criar um novo usuário.
@@ -57,18 +58,37 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*model.User, error) {
 		return nil, ErrCompanyGlobalNotFound
 	}
 
+	// 1. Buscar as roles que serão associadas.
+	roles, err := s.repoRole.FindAllByIDs(userDTO.RoleIDs)
+	if err != nil {
+		return nil, err // Erro de banco de dados
+	}
+	// Validação importante: garantir que todas as roles solicitadas foram encontradas.
+	if len(roles) != len(userDTO.RoleIDs) {
+		return nil, ErrRoleNotFound // Um novo erro de serviço que você pode criar
+	}
+
 	// 3. Mapear o DTO para o modelo do banco de dados.
 	newUser := &model.User{
-		ID:              util.New(), // O GORM pode gerar, mas é bom ser explícito.
+		ID:              util.New(),
 		Name:            userDTO.Name,
 		Email:           userDTO.Email,
 		Password:        string(hashedPassword),
 		CompanyGlobalID: userDTO.CompanyGlobalID,
 		CompanyGlobal:   *existingCompanyGlobal,
+		Roles:           roles,
 	}
 
 	// 4. Chamar o repositório para persistir o usuário.
 	if err := s.repo.Create(newUser); err != nil {
+		return nil, err
+	}
+
+	// 4. Associar as Roles na tabela de junção (user_roles).
+	// Esta é a forma correta de fazer a associação.
+	if err := s.repo.AssociateRoles(newUser, roles); err != nil {
+		// Em um cenário real, você poderia querer deletar o usuário recém-criado
+		// para não deixar dados inconsistentes (transação).
 		return nil, err
 	}
 

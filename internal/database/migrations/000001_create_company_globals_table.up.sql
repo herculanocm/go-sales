@@ -5,7 +5,7 @@
 CREATE SCHEMA IF NOT EXISTS master;
 
 -- Cria a tabela dentro do schema 'master'.
-CREATE TABLE master.company_globals (
+CREATE TABLE IF NOT EXISTS master.company_globals (
     id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,

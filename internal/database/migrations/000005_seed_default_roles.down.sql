@@ -1,0 +1,2 @@
+DELETE FROM master.roles
+WHERE name IN ('ROLE_ADMIN', 'ROLE_USER', 'ROLE_GUEST');

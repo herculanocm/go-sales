@@ -17,9 +17,10 @@ func SetupUserRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	// 1. Inicializar o Repositório
 	userRepo := database.NewUserRepository(db)
 	userCompanyRepo := database.NewCompanyGlobalRepository(db)
+	userRoleRepo := database.NewRoleRepository(db)
 
 	// 2. Inicializar o Serviço
-	userService := service.NewUserService(userRepo, userCompanyRepo)
+	userService := service.NewUserService(userRepo, userCompanyRepo, userRoleRepo)
 
 	// 3. Inicializar o Handler
 	userHandler := handler.NewUserHandler(userService, cfg)
