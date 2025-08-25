@@ -117,7 +117,7 @@ func (s *permissionService) FindAll(filters map[string][]string, page, pageSize 
 
 	permissionPtrs := make([]*model.Permission, len(permissions))
 	for i := range permissions {
-		permissionPtrs[i] = &permissions[i]
+		permissionPtrs[i] = permissions[i]
 	}
 	permissionDTOs := mapper.MapToPermissionDTOs(permissionPtrs)
 	totalPages := 0

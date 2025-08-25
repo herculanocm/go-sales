@@ -7,22 +7,103 @@ import (
 	"gorm.io/gorm"
 )
 
+// RoleRepositoryInterface define os métodos para interagir com os dados de role.
 type RoleRepositoryInterface interface {
 	FindAllByIDs(roleIDs []util.UUID) ([]*model.Role, error)
+	FindByID(id util.UUID) (*model.Role, error)
+	FindByName(name string) (*model.Role, error)
+	Create(role *model.Role) error
+	Update(role *model.Role) error
+	Delete(id util.UUID) error
+	FindAll(filters map[string][]string, page, pageSize int) ([]model.Role, int64, error)
+	AssociatePermissions(role *model.Role, permissions []*model.Permission) error
 }
 
+// roleRepository é a implementação concreta que usa o GORM.
 type roleRepository struct {
 	db *gorm.DB
 }
 
+// NewRoleRepository cria uma nova instância do repositório de role.
 func NewRoleRepository(db *gorm.DB) RoleRepositoryInterface {
 	return &roleRepository{db: db}
 }
 
-func (r *roleRepository) FindAllByIDs(roleIDs []util.UUID) ([]*model.Role, error) {
+func (r *roleRepository) FindByID(id util.UUID) (*model.Role, error) {
+	var role model.Role
+	if err := r.db.Where("id = ?", id).First(&role).Error; err != nil {
+		return nil, err
+	}
+	return &role, nil
+}
+
+func (r *roleRepository) FindByName(name string) (*model.Role, error) {
+	var role model.Role
+	if err := r.db.Where("name = ?", name).First(&role).Error; err != nil {
+		return nil, err
+	}
+	return &role, nil
+}
+
+func (r *roleRepository) Create(role *model.Role) error {
+	return r.db.Create(role).Error
+}
+
+func (r *roleRepository) Update(role *model.Role) error {
+	return r.db.Save(role).Error
+}
+
+func (r *roleRepository) Delete(id util.UUID) error {
+	result := r.db.Where("id = ?", id).Delete(&model.Role{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *roleRepository) FindAll(filters map[string][]string, page, pageSize int) ([]model.Role, int64, error) {
+	var roles []model.Role
+	var totalItems int64
+	query := r.db.Model(&model.Role{})
+
+	allowedFilters := map[string]bool{
+		"name": true,
+	}
+
+	for key, value := range filters {
+		if allowed, ok := allowedFilters[key]; ok && allowed && len(value) > 0 {
+			if key == "name" {
+				query = query.Where("name ILIKE ?", "%"+value[0]+"%")
+			} else {
+				query = query.Where(key+" = ?", value[0])
+			}
+		}
+	}
+
+	if err := query.Count(&totalItems).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+	if err := query.Offset(offset).Limit(pageSize).Find(&roles).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return roles, totalItems, nil
+}
+
+// Busca todas as roles pelos IDs informados
+func (r *roleRepository) FindAllByIDs(ids []util.UUID) ([]*model.Role, error) {
 	var roles []*model.Role
-	if err := r.db.Where("id IN ?", roleIDs).Find(&roles).Error; err != nil {
+	if err := r.db.Where("id IN ?", ids).Find(&roles).Error; err != nil {
 		return nil, err
 	}
 	return roles, nil
+}
+
+func (r *roleRepository) AssociatePermissions(role *model.Role, permissions []*model.Permission) error {
+	return r.db.Model(role).Association("Permissions").Append(permissions)
 }

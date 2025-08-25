@@ -16,22 +16,6 @@ type CreateUserDTO struct {
 	RoleIDs []util.UUID `json:"role_ids" binding:"required,dive,uuid"`
 }
 
-type RoleDTO struct {
-	ID            util.UUID        `json:"id"`
-	Name          string           `json:"name"`
-	Description   string           `json:"description"`
-	Permissions   []PermissionDTO  `json:"permissions"`
-	CompanyGlobal CompanyGlobalDTO `json:"company_global"`
-
-	CanEdit   bool `json:"can_edit"`
-	CanDelete bool `json:"can_delete"`
-	IsAdmin   bool `json:"is_admin"`
-
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	DeletedAt time.Time `json:"deleted_at"`
-}
-
 type UserDTO struct {
 	ID            util.UUID        `json:"id"`
 	Name          string           `json:"name"`

@@ -10,7 +10,7 @@ import (
 type Role struct {
 	ID          util.UUID `gorm:"column:id;type:uuid;primaryKey"`
 	Name        string    `gorm:"column:name;type:varchar(255);unique;not null"`
-	Description string    `gorm:"column:description;type:text"`
+	Description *string   `gorm:"column:description;type:text"`
 
 	CompanyGlobalID util.UUID     `gorm:"column:company_global_id;type:uuid;not null"`
 	Permissions     []*Permission `gorm:"many2many:role_permissions;"` // Correto para muitos-para-muitos

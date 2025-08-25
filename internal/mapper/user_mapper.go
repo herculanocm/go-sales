@@ -5,32 +5,6 @@ import (
 	"go-sales/internal/model"
 )
 
-func MapToRoleDTO(role *model.Role) *dto.RoleDTO {
-	if role == nil {
-		return nil
-	}
-
-	return &dto.RoleDTO{
-		ID:   role.ID,
-		Name: role.Name,
-	}
-}
-
-func MapToRoleDTOs(roles []*model.Role) *[]dto.RoleDTO {
-	if roles == nil {
-		empty := make([]dto.RoleDTO, 0)
-		return &empty
-	}
-
-	roleDTOs := make([]dto.RoleDTO, 0, len(roles))
-	for _, role := range roles {
-		if dto := MapToRoleDTO(role); dto != nil {
-			roleDTOs = append(roleDTOs, *dto)
-		}
-	}
-	return &roleDTOs
-}
-
 func MapToUserDTO(user *model.User) *dto.UserDTO {
 	if user == nil {
 		return nil

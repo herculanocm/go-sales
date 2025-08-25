@@ -2,6 +2,7 @@ package database
 
 import (
 	"go-sales/internal/model"
+	"go-sales/pkg/util"
 
 	"gorm.io/gorm"
 )
@@ -12,10 +13,10 @@ type CompanyGlobalRepository struct {
 
 type CompanyGlobalRepositoryInterface interface {
 	Create(company *model.CompanyGlobal) error
-	FindByID(id string) (*model.CompanyGlobal, error)
+	FindByID(id util.UUID) (*model.CompanyGlobal, error)
 	FindByCGC(cgc string) (*model.CompanyGlobal, error)
 	Update(company *model.CompanyGlobal) error
-	Delete(id string) error
+	Delete(id util.UUID) error
 	FindAll(filters map[string][]string, page, pageSize int) ([]model.CompanyGlobal, int64, error)
 }
 
@@ -29,7 +30,7 @@ func (r *CompanyGlobalRepository) Create(company *model.CompanyGlobal) error {
 	return r.db.Create(company).Error
 }
 
-func (r *CompanyGlobalRepository) FindByID(id string) (*model.CompanyGlobal, error) {
+func (r *CompanyGlobalRepository) FindByID(id util.UUID) (*model.CompanyGlobal, error) {
 	var company model.CompanyGlobal
 	if err := r.db.Where("id = ?", id).First(&company).Error; err != nil {
 		return nil, err
@@ -49,7 +50,7 @@ func (r *CompanyGlobalRepository) Update(company *model.CompanyGlobal) error {
 	return r.db.Save(company).Error
 }
 
-func (r *CompanyGlobalRepository) Delete(id string) error {
+func (r *CompanyGlobalRepository) Delete(id util.UUID) error {
 	// Executa a operação de delete e armazena o resultado.
 	result := r.db.Where("id = ?", id).Delete(&model.CompanyGlobal{})
 

@@ -6,6 +6,7 @@ import (
 	"go-sales/internal/config"
 	"go-sales/internal/dto"
 	"go-sales/internal/service"
+	"go-sales/pkg/util"
 	"net/http"
 	"strconv"
 
@@ -73,8 +74,14 @@ func (h *CompanyGlobalHandler) Update(c *gin.Context) {
 		return
 	}
 
+	id, err := util.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
 	// 2. Chamar a Camada de Serviço
-	updatedCompany, err := h.service.Update(*updateCompanyDTO, idStr)
+	updatedCompany, err := h.service.Update(*updateCompanyDTO, id)
 	if err != nil {
 		// 3. Tratar Erros da Camada de Serviço
 		if errors.Is(err, service.ErrNotFound) {
@@ -99,8 +106,14 @@ func (h *CompanyGlobalHandler) Update(c *gin.Context) {
 func (h *CompanyGlobalHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 
+	id, err := util.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
 	// 2. Chamar a Camada de Serviço
-	if err := h.service.Delete(idStr); err != nil {
+	if err := h.service.Delete(id); err != nil {
 		// 3. Tratar Erros da Camada de Serviço
 		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -139,7 +152,13 @@ func (h *CompanyGlobalHandler) FindByCGC(c *gin.Context) {
 func (h *CompanyGlobalHandler) FindByID(c *gin.Context) {
 	idStr := c.Param("id")
 
-	company, err := h.service.FindByID(idStr)
+	id, err := util.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	company, err := h.service.FindByID(id)
 	if err != nil {
 		// 3. Tratar Erros da Camada de Serviço
 		if errors.Is(err, service.ErrNotFound) {

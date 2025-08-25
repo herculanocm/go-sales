@@ -2,6 +2,7 @@ package database
 
 import (
 	"go-sales/internal/model"
+	"go-sales/pkg/util"
 
 	"gorm.io/gorm"
 )
@@ -13,7 +14,8 @@ type PermissionRepositoryInterface interface {
 	Create(permission *model.Permission) error
 	Update(permission *model.Permission) error
 	Delete(id string) error
-	FindAll(filters map[string][]string, page, pageSize int) ([]model.Permission, int64, error)
+	FindAll(filters map[string][]string, page, pageSize int) ([]*model.Permission, int64, error)
+	FindByIDs(ids []util.UUID) ([]*model.Permission, error)
 }
 
 // permissionRepository é a implementação concreta que usa o GORM.
@@ -61,8 +63,8 @@ func (r *permissionRepository) Delete(id string) error {
 	return nil
 }
 
-func (r *permissionRepository) FindAll(filters map[string][]string, page, pageSize int) ([]model.Permission, int64, error) {
-	var permissions []model.Permission
+func (r *permissionRepository) FindAll(filters map[string][]string, page, pageSize int) ([]*model.Permission, int64, error) {
+	var permissions []*model.Permission
 	var totalItems int64
 	query := r.db.Model(&model.Permission{})
 
@@ -90,4 +92,12 @@ func (r *permissionRepository) FindAll(filters map[string][]string, page, pageSi
 	}
 
 	return permissions, totalItems, nil
+}
+
+func (r *permissionRepository) FindByIDs(ids []util.UUID) ([]*model.Permission, error) {
+	var permissions []*model.Permission
+	if err := r.db.Where("id IN ?", ids).Find(&permissions).Error; err != nil {
+		return nil, err
+	}
+	return permissions, nil
 }

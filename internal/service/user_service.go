@@ -38,7 +38,7 @@ func NewUserService(repo database.UserRepositoryInterface, repoCompany database.
 func (s *userService) Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, error) {
 	// 1. Verificar se o email já existe (lógica de negócio).
 	existingUser, err := s.repo.FindByEmail(userDTO.Email)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil {
 		// Um erro inesperado do banco de dados.
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, error) {
 		return nil, err
 	}
 
-	existingCompanyGlobal, err := s.repoCompany.FindByID(userDTO.CompanyGlobalID.String())
+	existingCompanyGlobal, err := s.repoCompany.FindByID(userDTO.CompanyGlobalID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrCompanyGlobalNotFound
 	}

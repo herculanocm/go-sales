@@ -17,9 +17,9 @@ type CompanyGlobalService struct {
 }
 type CompanyGlobalServiceInterface interface {
 	Create(companyDTO dto.CreateCompanyGlobalDTO) (*dto.CompanyGlobalDTO, error)
-	Update(companyDTO dto.CreateCompanyGlobalDTO, id string) (*dto.CompanyGlobalDTO, error)
-	Delete(id string) error
-	FindByID(id string) (*dto.CompanyGlobalDTO, error)
+	Update(companyDTO dto.CreateCompanyGlobalDTO, id util.UUID) (*dto.CompanyGlobalDTO, error)
+	Delete(id util.UUID) error
+	FindByID(id util.UUID) (*dto.CompanyGlobalDTO, error)
 	FindByCGC(cgc string) (*dto.CompanyGlobalDTO, error)
 	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.CompanyGlobalDTO], error)
 }
@@ -57,7 +57,7 @@ func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*d
 	return mapper.MapToCompanyGlobalDTO(newCompany), nil
 }
 
-func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id string) (*dto.CompanyGlobalDTO, error) {
+func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id util.UUID) (*dto.CompanyGlobalDTO, error) {
 	// 1. Verificar se a empresa existe.
 	existingCompany, err := s.repo.FindByID(id)
 	if err != nil {
@@ -96,7 +96,7 @@ func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id 
 	return mapper.MapToCompanyGlobalDTO(updatedCompany), nil
 }
 
-func (s *CompanyGlobalService) Delete(id string) error {
+func (s *CompanyGlobalService) Delete(id util.UUID) error {
 	err := s.repo.Delete(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -107,7 +107,7 @@ func (s *CompanyGlobalService) Delete(id string) error {
 	return nil
 }
 
-func (s *CompanyGlobalService) FindByID(id string) (*dto.CompanyGlobalDTO, error) {
+func (s *CompanyGlobalService) FindByID(id util.UUID) (*dto.CompanyGlobalDTO, error) {
 	company, err := s.repo.FindByID(id)
 	if err != nil {
 		// AQUI ESTÁ A CORREÇÃO:
