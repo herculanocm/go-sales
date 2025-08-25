@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"go-sales/internal/config"
 	"go-sales/internal/dto"
-	"go-sales/internal/mapper"
 	"go-sales/internal/service"
 	"net/http"
 	"strconv"
@@ -40,7 +39,6 @@ func (h *CompanyGlobalHandler) Create(c *gin.Context) {
 		return
 	}
 
-	// 2. Chamar a Camada de Serviço
 	createdCompany, err := h.service.Create(*createCompanyDTO)
 	if err != nil {
 		// 3. Tratar Erros da Camada de Serviço
@@ -56,7 +54,7 @@ func (h *CompanyGlobalHandler) Create(c *gin.Context) {
 	}
 
 	// 4. Retornar Resposta de Sucesso
-	c.JSON(http.StatusCreated, mapper.MapToCompanyGlobalDTO(createdCompany))
+	c.JSON(http.StatusCreated, createdCompany)
 }
 
 // Update é o método do handler para atualizar uma empresa global.
@@ -94,7 +92,7 @@ func (h *CompanyGlobalHandler) Update(c *gin.Context) {
 	}
 
 	// 4. Retornar Resposta de Sucesso
-	c.JSON(http.StatusOK, mapper.MapToCompanyGlobalDTO(updatedCompany))
+	c.JSON(http.StatusOK, updatedCompany)
 }
 
 // Delete é o método do handler para apagar uma empresa global.
@@ -135,7 +133,7 @@ func (h *CompanyGlobalHandler) FindByCGC(c *gin.Context) {
 	}
 
 	// 4. Retornar Resposta de Sucesso
-	c.JSON(http.StatusOK, mapper.MapToCompanyGlobalDTO(company))
+	c.JSON(http.StatusOK, company)
 }
 
 func (h *CompanyGlobalHandler) FindByID(c *gin.Context) {
@@ -155,7 +153,7 @@ func (h *CompanyGlobalHandler) FindByID(c *gin.Context) {
 	}
 
 	// 4. Retornar Resposta de Sucesso
-	c.JSON(http.StatusOK, mapper.MapToCompanyGlobalDTO(company))
+	c.JSON(http.StatusOK, company)
 }
 
 func (h *CompanyGlobalHandler) FindAll(c *gin.Context) {

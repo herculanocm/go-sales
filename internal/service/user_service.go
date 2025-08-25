@@ -13,12 +13,11 @@ import (
 	"gorm.io/gorm"
 )
 
-// UserService define a interface para a lógica de negócios do usuário.
 type UserServiceInterface interface {
-	Create(userDTO dto.CreateUserDTO) (*model.User, error)
-	Update(userDTO dto.CreateUserDTO, userID string) (*model.User, error)
+	Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, error)
+	Update(userDTO dto.CreateUserDTO, userID string) (*dto.UserDTO, error)
 	Delete(userID string) error
-	FindByID(userID string) (*model.User, error)
+	FindByID(userID string) (*dto.UserDTO, error)
 	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.UserDTO], error)
 }
 
@@ -36,7 +35,7 @@ func NewUserService(repo database.UserRepositoryInterface, repoCompany database.
 }
 
 // Create contém a lógica de negócios para criar um novo usuário.
-func (s *userService) Create(userDTO dto.CreateUserDTO) (*model.User, error) {
+func (s *userService) Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, error) {
 	// 1. Verificar se o email já existe (lógica de negócio).
 	existingUser, err := s.repo.FindByEmail(userDTO.Email)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -96,10 +95,10 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*model.User, error) {
 
 	// 5. Retornar o usuário criado (sem a senha).
 	newUser.Password = "" // Nunca retorne o hash da senha.
-	return newUser, nil
+	return mapper.MapToUserDTO(newUser), nil
 }
 
-func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*model.User, error) {
+func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*dto.UserDTO, error) {
 	// 1. Buscar o usuário existente.
 	existingUser, err := s.repo.FindByID(userID)
 	if err != nil {
@@ -143,7 +142,7 @@ func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*model.U
 
 	// 5. Retornar o usuário atualizado.
 	existingUser.Password = ""
-	return existingUser, nil
+	return mapper.MapToUserDTO(existingUser), nil
 }
 
 func (s *userService) Delete(id string) error {
@@ -158,8 +157,12 @@ func (s *userService) Delete(id string) error {
 	return nil // Retorno nil indica sucesso na exclusão.
 }
 
-func (s *userService) FindByID(userID string) (*model.User, error) {
-	return s.repo.FindByID(userID)
+func (s *userService) FindByID(userID string) (*dto.UserDTO, error) {
+	user, err := s.repo.FindByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.MapToUserDTO(user), nil
 }
 
 func (s *userService) FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.UserDTO], error) {

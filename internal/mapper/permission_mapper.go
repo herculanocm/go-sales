@@ -7,7 +7,11 @@ import (
 )
 
 // MapToPermissionDTO converte um model.Permission para dto.PermissionDTO.
-func MapToPermissionDTO(permission *model.Permission) dto.PermissionDTO {
+func MapToPermissionDTO(permission *model.Permission) *dto.PermissionDTO {
+	if permission == nil {
+		return nil
+	}
+
 	var deletedAt *time.Time
 	if permission.DeletedAt.Valid {
 		deletedAt = &permission.DeletedAt.Time
@@ -15,7 +19,7 @@ func MapToPermissionDTO(permission *model.Permission) dto.PermissionDTO {
 		deletedAt = nil
 	}
 
-	return dto.PermissionDTO{
+	return &dto.PermissionDTO{
 		ID:          permission.ID,
 		Name:        permission.Name,
 		Description: permission.Description,
@@ -32,9 +36,11 @@ func MapToPermissionDTOs(permissions []*model.Permission) *[]dto.PermissionDTO {
 		return &empty
 	}
 
-	result := make([]dto.PermissionDTO, len(permissions))
-	for i, permission := range permissions {
-		result[i] = MapToPermissionDTO(permission)
+	result := make([]dto.PermissionDTO, 0, len(permissions))
+	for _, permission := range permissions {
+		if dto := MapToPermissionDTO(permission); dto != nil {
+			result = append(result, *dto)
+		}
 	}
 	return &result
 }

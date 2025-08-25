@@ -16,11 +16,11 @@ type CompanyGlobalService struct {
 	repo database.CompanyGlobalRepositoryInterface
 }
 type CompanyGlobalServiceInterface interface {
-	Create(companyDTO dto.CreateCompanyGlobalDTO) (*model.CompanyGlobal, error)
-	Update(companyDTO dto.CreateCompanyGlobalDTO, id string) (*model.CompanyGlobal, error)
+	Create(companyDTO dto.CreateCompanyGlobalDTO) (*dto.CompanyGlobalDTO, error)
+	Update(companyDTO dto.CreateCompanyGlobalDTO, id string) (*dto.CompanyGlobalDTO, error)
 	Delete(id string) error
-	FindByID(id string) (*model.CompanyGlobal, error)
-	FindByCGC(cgc string) (*model.CompanyGlobal, error)
+	FindByID(id string) (*dto.CompanyGlobalDTO, error)
+	FindByCGC(cgc string) (*dto.CompanyGlobalDTO, error)
 	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.CompanyGlobalDTO], error)
 }
 
@@ -30,7 +30,7 @@ func NewCompanyGlobalService(repo database.CompanyGlobalRepositoryInterface) Com
 	}
 }
 
-func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*model.CompanyGlobal, error) {
+func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*dto.CompanyGlobalDTO, error) {
 	// 1. Verificar se o CGC já existe (lógica de negócio).
 	existingCompany, err := s.repo.FindByCGC(companyDTO.CGC)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -54,10 +54,10 @@ func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*m
 		return nil, err
 	}
 
-	return newCompany, nil
+	return mapper.MapToCompanyGlobalDTO(newCompany), nil
 }
 
-func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id string) (*model.CompanyGlobal, error) {
+func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id string) (*dto.CompanyGlobalDTO, error) {
 	// 1. Verificar se a empresa existe.
 	existingCompany, err := s.repo.FindByID(id)
 	if err != nil {
@@ -93,7 +93,7 @@ func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id 
 		return nil, err
 	}
 
-	return updatedCompany, nil
+	return mapper.MapToCompanyGlobalDTO(updatedCompany), nil
 }
 
 func (s *CompanyGlobalService) Delete(id string) error {
@@ -107,7 +107,7 @@ func (s *CompanyGlobalService) Delete(id string) error {
 	return nil
 }
 
-func (s *CompanyGlobalService) FindByID(id string) (*model.CompanyGlobal, error) {
+func (s *CompanyGlobalService) FindByID(id string) (*dto.CompanyGlobalDTO, error) {
 	company, err := s.repo.FindByID(id)
 	if err != nil {
 		// AQUI ESTÁ A CORREÇÃO:
@@ -118,10 +118,10 @@ func (s *CompanyGlobalService) FindByID(id string) (*model.CompanyGlobal, error)
 		// Para qualquer outro erro, nós o repassamos.
 		return nil, err
 	}
-	return company, nil
+	return mapper.MapToCompanyGlobalDTO(company), nil
 }
 
-func (s *CompanyGlobalService) FindByCGC(cgc string) (*model.CompanyGlobal, error) {
+func (s *CompanyGlobalService) FindByCGC(cgc string) (*dto.CompanyGlobalDTO, error) {
 	company, err := s.repo.FindByCGC(cgc)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -129,7 +129,7 @@ func (s *CompanyGlobalService) FindByCGC(cgc string) (*model.CompanyGlobal, erro
 		}
 		return nil, err
 	}
-	return company, nil
+	return mapper.MapToCompanyGlobalDTO(company), nil
 }
 
 // ...

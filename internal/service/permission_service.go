@@ -14,10 +14,10 @@ import (
 
 // PermissionServiceInterface define a interface para a lógica de negócios de permissões.
 type PermissionServiceInterface interface {
-	Create(permissionDTO dto.CreatePermissionDTO) (*model.Permission, error)
-	Update(permissionDTO dto.CreatePermissionDTO, permissionID string) (*model.Permission, error)
+	Create(permissionDTO dto.CreatePermissionDTO) (*dto.PermissionDTO, error)
+	Update(permissionDTO dto.CreatePermissionDTO, permissionID string) (*dto.PermissionDTO, error)
 	Delete(permissionID string) error
-	FindByID(permissionID string) (*model.Permission, error)
+	FindByID(permissionID string) (*dto.PermissionDTO, error)
 	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.PermissionDTO], error)
 }
 
@@ -31,7 +31,7 @@ func NewPermissionService(repo database.PermissionRepositoryInterface) Permissio
 	return &permissionService{repo: repo}
 }
 
-func (s *permissionService) Create(permissionDTO dto.CreatePermissionDTO) (*model.Permission, error) {
+func (s *permissionService) Create(permissionDTO dto.CreatePermissionDTO) (*dto.PermissionDTO, error) {
 	// Verificar se já existe uma permissão com o mesmo nome
 	existingPermission, err := s.repo.FindByName(permissionDTO.Name)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -51,10 +51,10 @@ func (s *permissionService) Create(permissionDTO dto.CreatePermissionDTO) (*mode
 		return nil, err
 	}
 
-	return newPermission, nil
+	return mapper.MapToPermissionDTO(newPermission), nil
 }
 
-func (s *permissionService) Update(permissionDTO dto.CreatePermissionDTO, permissionID string) (*model.Permission, error) {
+func (s *permissionService) Update(permissionDTO dto.CreatePermissionDTO, permissionID string) (*dto.PermissionDTO, error) {
 	existingPermission, err := s.repo.FindByID(permissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -84,7 +84,7 @@ func (s *permissionService) Update(permissionDTO dto.CreatePermissionDTO, permis
 		return nil, err
 	}
 
-	return existingPermission, nil
+	return mapper.MapToPermissionDTO(existingPermission), nil
 }
 
 func (s *permissionService) Delete(permissionID string) error {
@@ -98,8 +98,15 @@ func (s *permissionService) Delete(permissionID string) error {
 	return nil
 }
 
-func (s *permissionService) FindByID(permissionID string) (*model.Permission, error) {
-	return s.repo.FindByID(permissionID)
+func (s *permissionService) FindByID(permissionID string) (*dto.PermissionDTO, error) {
+	permission, err := s.repo.FindByID(permissionID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return mapper.MapToPermissionDTO(permission), nil
 }
 
 func (s *permissionService) FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.PermissionDTO], error) {

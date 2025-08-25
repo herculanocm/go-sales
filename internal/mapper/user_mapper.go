@@ -22,9 +22,11 @@ func MapToRoleDTOs(roles []*model.Role) *[]dto.RoleDTO {
 		return &empty
 	}
 
-	roleDTOs := make([]dto.RoleDTO, len(roles))
-	for i, role := range roles {
-		roleDTOs[i] = *MapToRoleDTO(role)
+	roleDTOs := make([]dto.RoleDTO, 0, len(roles))
+	for _, role := range roles {
+		if dto := MapToRoleDTO(role); dto != nil {
+			roleDTOs = append(roleDTOs, *dto)
+		}
 	}
 	return &roleDTOs
 }
@@ -50,9 +52,11 @@ func MapToUserDTOs(users []*model.User) *[]dto.UserDTO {
 		return &empty
 	}
 
-	userDTOs := make([]dto.UserDTO, len(users))
-	for i, user := range users {
-		userDTOs[i] = *MapToUserDTO(user)
+	userDTOs := make([]dto.UserDTO, 0, len(users))
+	for _, user := range users {
+		if dto := MapToUserDTO(user); dto != nil {
+			userDTOs = append(userDTOs, *dto)
+		}
 	}
 	return &userDTOs
 }

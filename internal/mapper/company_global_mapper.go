@@ -7,6 +7,11 @@ import (
 )
 
 func MapToCompanyGlobalDTO(company *model.CompanyGlobal) *dto.CompanyGlobalDTO {
+
+	if company == nil {
+		return nil
+	}
+
 	var deletedAt *time.Time
 	// Verifica se o campo DeletedAt é válido (não é NULL no banco).
 	if company.DeletedAt.Valid {
@@ -32,9 +37,11 @@ func MapToCompanyGlobalDTOs(companies []*model.CompanyGlobal) *[]dto.CompanyGlob
 		return &empty
 	}
 
-	dtos := make([]dto.CompanyGlobalDTO, len(companies))
-	for i, company := range companies {
-		dtos[i] = *MapToCompanyGlobalDTO(company)
+	dtos := make([]dto.CompanyGlobalDTO, 0, len(companies))
+	for _, company := range companies {
+		if dto := MapToCompanyGlobalDTO(company); dto != nil {
+			dtos = append(dtos, *dto)
+		}
 	}
 	return &dtos
 }

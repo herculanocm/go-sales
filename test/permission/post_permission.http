@@ -2,5 +2,5 @@ POST http://localhost:8081/api/v1/permissions
 Content-Type: application/json
 
 {
-	"name": "testee"
+	"name": "testee4"
 }
