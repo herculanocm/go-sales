@@ -25,6 +25,24 @@ func NewCompanyGlobalHandler(service service.CompanyGlobalServiceInterface, cfg 
 	}
 }
 
+func (h *CompanyGlobalHandler) Restore(c *gin.Context) {
+	idStr := c.Param("id")
+	log.Info().Str("id", idStr).Msg("Restoring company global")
+	id, err := util.Parse(idStr)
+	if err != nil {
+		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
+		HandleError(customError, "CompanyGlobalHandler.Restore - Error parsing ID", c)
+		return
+	}
+
+	if err := h.service.Restore(id); err != nil {
+		HandleError(err, "CompanyGlobalHandler.Restore error", c)
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
+
 // Create é o método do handler para criar uma nova empresa global.
 func (h *CompanyGlobalHandler) Create(c *gin.Context) {
 	log.Info().Msg("Creating a new company global")

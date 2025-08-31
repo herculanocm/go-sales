@@ -2,7 +2,8 @@ POST http://localhost:8081/api/v1/company-globals
 Content-Type: application/json
 
 {
-	"name": "Company Default",
-	"cgc": "12345678000191",
+	"name": "Company Default2",
+	"social_name": "Company Default Social2",
+	"cgc": "12345678000195",
 	"enabled": true
 }

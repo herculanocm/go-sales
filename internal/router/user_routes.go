@@ -7,6 +7,7 @@ import (
 	"go-sales/internal/handler"
 	"go-sales/internal/middleware"
 	"go-sales/internal/service"
+	"reflect"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -26,8 +27,8 @@ func SetupUserRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	userHandler := handler.NewUserHandler(userService, cfg)
 
 	// 4. Definir as rotas para /users
-	router.POST("/users", middleware.ValidateDTO(&dto.CreateUserDTO{}), userHandler.Create)
-	router.PUT("/users/:id", middleware.ValidateUUID("id"), middleware.ValidateDTO(&dto.CreateUserDTO{}), userHandler.Update)
+	router.POST("/users", middleware.ValidateDTO(reflect.TypeOf(dto.CreateUserDTO{})), userHandler.Create)
+	router.PUT("/users/:id", middleware.ValidateUUID("id"), middleware.ValidateDTO(reflect.TypeOf(dto.CreateUserDTO{})), userHandler.Update)
 	router.DELETE("/users/:id", middleware.ValidateUUID("id"), userHandler.Delete)
 	router.GET("/users/:id", middleware.ValidateUUID("id"), userHandler.FindByID)
 	router.GET("/users", userHandler.FindAll)

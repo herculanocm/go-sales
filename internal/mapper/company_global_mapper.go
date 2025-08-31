@@ -3,6 +3,7 @@ package mapper
 import (
 	"go-sales/internal/dto"
 	"go-sales/internal/model"
+	"go-sales/pkg/util"
 	"time"
 )
 
@@ -19,15 +20,11 @@ func MapToCompanyGlobalDTO(company *model.CompanyGlobal) *dto.CompanyGlobalDTO {
 		deletedAt = &company.DeletedAt.Time
 	}
 
-	var description *string
-	if company.Description != "" {
-		description = &company.Description
-	}
-
 	return &dto.CompanyGlobalDTO{
 		ID:          company.ID,
 		Name:        company.Name,
-		Description: description,
+		SocialName:  company.SocialName,
+		Description: company.Description,
 		CGC:         company.CGC,
 		Enabled:     company.Enabled,
 		CreatedAt:   company.CreatedAt,
@@ -49,4 +46,34 @@ func MapToCompanyGlobalDTOs(companies []*model.CompanyGlobal) *[]dto.CompanyGlob
 		}
 	}
 	return &dtos
+}
+
+func MapToCreateCompanyGlobal(companyDTO *dto.CreateCompanyGlobalDTO) *model.CompanyGlobal {
+	if companyDTO == nil {
+		return nil
+	}
+
+	return &model.CompanyGlobal{
+		ID:          util.New(),
+		Name:        companyDTO.Name,
+		SocialName:  companyDTO.SocialName,
+		Description: companyDTO.Description,
+		CGC:         companyDTO.CGC,
+		Enabled:     companyDTO.Enabled,
+	}
+}
+
+func MapToUpdateCompanyGlobal(companyDTO *dto.CreateCompanyGlobalDTO, id util.UUID) *model.CompanyGlobal {
+	if companyDTO == nil {
+		return nil
+	}
+
+	return &model.CompanyGlobal{
+		ID:          id,
+		Name:        companyDTO.Name,
+		SocialName:  companyDTO.SocialName,
+		Description: companyDTO.Description,
+		CGC:         companyDTO.CGC,
+		Enabled:     companyDTO.Enabled,
+	}
 }

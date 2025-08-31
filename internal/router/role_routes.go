@@ -7,6 +7,7 @@ import (
 	"go-sales/internal/handler"
 	"go-sales/internal/middleware"
 	"go-sales/internal/service"
+	"reflect"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -20,8 +21,8 @@ func SetupRoleRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	roleService := service.NewRoleService(roleRepo, permRepo, companyRepo)
 	roleHandler := handler.NewRoleHandler(roleService, cfg)
 
-	router.POST("/roles", middleware.ValidateDTO(&dto.CreateRoleDTO{}), roleHandler.Create)
-	router.PUT("/roles/:id", middleware.ValidateUUID("id"), middleware.ValidateDTO(&dto.CreateRoleDTO{}), roleHandler.Update)
+	router.POST("/roles", middleware.ValidateDTO(reflect.TypeOf(dto.CreateRoleDTO{})), roleHandler.Create)
+	router.PUT("/roles/:id", middleware.ValidateUUID("id"), middleware.ValidateDTO(reflect.TypeOf(dto.CreateRoleDTO{})), roleHandler.Update)
 	router.DELETE("/roles/:id", middleware.ValidateUUID("id"), roleHandler.Delete)
 	router.GET("/roles/:id", middleware.ValidateUUID("id"), roleHandler.FindByID)
 	router.GET("/roles", roleHandler.FindAll)

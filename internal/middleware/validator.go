@@ -12,19 +12,20 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func ValidateDTO(dto interface{}) gin.HandlerFunc {
+func ValidateDTO(dtoType reflect.Type) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Cria uma nova instância do DTO para cada requisição
+		dto := reflect.New(dtoType).Interface()
+
 		if err := c.ShouldBindJSON(dto); err != nil {
 			var ve validator.ValidationErrors
 			if errors.As(err, &ve) {
 				out := make([]map[string]string, len(ve))
-				typ := reflect.TypeOf(dto)
-				// Se dto for ponteiro, pega o elemento
+				typ := dtoType
 				if typ.Kind() == reflect.Ptr {
 					typ = typ.Elem()
 				}
 				for i, fe := range ve {
-					// Busca o nome da propriedade JSON
 					field, ok := typ.FieldByName(fe.StructField())
 					jsonTag := ""
 					if ok {
@@ -32,7 +33,7 @@ func ValidateDTO(dto interface{}) gin.HandlerFunc {
 					}
 					jsonName := strings.Split(jsonTag, ",")[0]
 					if jsonName == "" {
-						jsonName = fe.Field() // fallback para o nome Go
+						jsonName = fe.Field()
 					}
 					out[i] = map[string]string{
 						"field":   jsonName,

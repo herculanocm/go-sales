@@ -7,6 +7,7 @@ import (
 	"go-sales/internal/handler"
 	"go-sales/internal/middleware"
 	"go-sales/internal/service"
+	"reflect"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -24,9 +25,11 @@ func SetupPermissionRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Con
 	permissionHandler := handler.NewPermissionHandler(permissionService, cfg)
 
 	// 4. Definir as rotas para /permissions
-	router.POST("/permissions", middleware.ValidateDTO(&dto.CreatePermissionDTO{}), permissionHandler.Create)
-	router.PUT("/permissions/:id", middleware.ValidateUUID("id"), middleware.ValidateDTO(&dto.CreatePermissionDTO{}), permissionHandler.Update)
+	router.POST("/permissions", middleware.ValidateDTO(reflect.TypeOf(dto.CreatePermissionDTO{})), permissionHandler.Create)
+	router.PUT("/permissions/:id", middleware.ValidateUUID("id"), middleware.ValidateDTO(reflect.TypeOf(dto.CreatePermissionDTO{})), permissionHandler.Update)
 	router.DELETE("/permissions/:id", middleware.ValidateUUID("id"), permissionHandler.Delete)
 	router.GET("/permissions/:id", middleware.ValidateUUID("id"), permissionHandler.FindByID)
 	router.GET("/permissions", permissionHandler.FindAll)
+
+	// adding restore point for soft delete
 }

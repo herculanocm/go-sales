@@ -1,9 +1,9 @@
-PUT http://localhost:8081/api/v1/company-globals/3924a513-9e1c-46ef-969c-1cef6b582a5d
+PUT http://localhost:8081/api/v1/company-globals/a0f47461-c7aa-4502-abb0-46ab76a6f5d1
 Content-Type: application/json
 
 {
-    "id": "3924a513-9e1c-46ef-969c-1cef6b582a5d",
-	"name": "Company Default",
+	"name": "Company Default Edited",
+	"social_name": "Company Default Social Edited",
 	"cgc": "12345678000195",
 	"enabled": true
 }

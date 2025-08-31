@@ -23,12 +23,25 @@ type CompanyGlobalServiceInterface interface {
 	FindByID(id util.UUID) (*dto.CompanyGlobalDTO, ErrorUtil)
 	FindByCGC(cgc string) (*dto.CompanyGlobalDTO, ErrorUtil)
 	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.CompanyGlobalDTO], ErrorUtil)
+	Restore(id util.UUID) ErrorUtil
 }
 
 func NewCompanyGlobalService(repo database.CompanyGlobalRepositoryInterface) CompanyGlobalServiceInterface {
 	return &CompanyGlobalService{
 		repo: repo,
 	}
+}
+
+func (s *CompanyGlobalService) Restore(id util.UUID) ErrorUtil {
+	err := s.repo.Restore(id)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to restore company")
+		return GormDefaultError(err)
+	}
+	return nil
 }
 
 func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*dto.CompanyGlobalDTO, ErrorUtil) {
@@ -50,13 +63,7 @@ func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*d
 	}
 
 	// 2. Mapear o DTO para o modelo do banco de dados.
-	newCompany := &model.CompanyGlobal{
-		ID:          util.New(),
-		Name:        companyDTO.Name,
-		Description: companyDTO.Description,
-		CGC:         companyDTO.CGC,
-		Enabled:     companyDTO.Enabled,
-	}
+	newCompany := mapper.MapToCreateCompanyGlobal(&companyDTO)
 
 	// 3. Chamar o repositório para persistir a empresa.
 	if err := s.repo.Create(newCompany); err != nil {
@@ -72,7 +79,7 @@ func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*d
 
 func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id util.UUID) (*dto.CompanyGlobalDTO, ErrorUtil) {
 	// 1. Verificar se a empresa existe.
-	_, err := s.repo.FindByID(id, false)
+	original, err := s.repo.FindByID(id, false)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -94,13 +101,9 @@ func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id 
 	}
 
 	// 3. Mapear o DTO para o modelo do banco de dados.
-	updatedCompany := &model.CompanyGlobal{
-		ID:          id,
-		Name:        companyDTO.Name,
-		Description: companyDTO.Description,
-		CGC:         companyDTO.CGC,
-		Enabled:     companyDTO.Enabled,
-	}
+	updatedCompany := mapper.MapToUpdateCompanyGlobal(&companyDTO, id)
+
+	updatedCompany.CreatedAt = original.CreatedAt
 
 	// 4. Chamar o repositório para persistir a empresa.
 	if err := s.repo.Update(updatedCompany); err != nil {

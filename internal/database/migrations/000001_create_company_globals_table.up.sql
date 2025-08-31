@@ -2,11 +2,12 @@
 CREATE TABLE IF NOT EXISTS master.company_globals (
     id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
+    social_name VARCHAR(255),
     description TEXT,
     cgc VARCHAR(14) NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT false,
-    created_at TIMESTAMPTZ,
-    updated_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     deleted_at TIMESTAMPTZ,
 
     CONSTRAINT pk_company_globals PRIMARY KEY (id),

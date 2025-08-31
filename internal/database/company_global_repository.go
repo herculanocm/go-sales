@@ -18,6 +18,7 @@ type CompanyGlobalRepositoryInterface interface {
 	Update(company *model.CompanyGlobal) error
 	Delete(id util.UUID) error
 	FindAll(filters map[string][]string, page, pageSize int, useUnscoped bool) ([]model.CompanyGlobal, int64, error)
+	Restore(id util.UUID) error
 }
 
 func NewCompanyGlobalRepository(db *gorm.DB) CompanyGlobalRepositoryInterface {
@@ -118,4 +119,19 @@ func (r *CompanyGlobalRepository) FindAll(filters map[string][]string, page, pag
 	}
 
 	return companies, totalItems, nil
+}
+
+func (r *CompanyGlobalRepository) Restore(id util.UUID) error {
+	result := r.db.Model(&model.CompanyGlobal{}).
+		Unscoped().
+		Where("id = ?", id).
+		Update("deleted_at", nil)
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
