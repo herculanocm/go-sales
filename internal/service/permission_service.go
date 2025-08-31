@@ -14,11 +14,11 @@ import (
 
 // PermissionServiceInterface define a interface para a lógica de negócios de permissões.
 type PermissionServiceInterface interface {
-	Create(permissionDTO dto.CreatePermissionDTO) (*dto.PermissionDTO, error)
-	Update(permissionDTO dto.CreatePermissionDTO, permissionID string) (*dto.PermissionDTO, error)
-	Delete(permissionID string) error
-	FindByID(permissionID string) (*dto.PermissionDTO, error)
-	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.PermissionDTO], error)
+	Create(permissionDTO dto.CreatePermissionDTO) (*dto.PermissionDTO, ErrorUtil)
+	Update(permissionDTO dto.CreatePermissionDTO, permissionID string) (*dto.PermissionDTO, ErrorUtil)
+	Delete(permissionID string) ErrorUtil
+	FindByID(permissionID string) (*dto.PermissionDTO, ErrorUtil)
+	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.PermissionDTO], ErrorUtil)
 }
 
 // permissionService é a implementação concreta.
@@ -31,36 +31,37 @@ func NewPermissionService(repo database.PermissionRepositoryInterface) Permissio
 	return &permissionService{repo: repo}
 }
 
-func (s *permissionService) Create(permissionDTO dto.CreatePermissionDTO) (*dto.PermissionDTO, error) {
+func (s *permissionService) Create(permissionDTO dto.CreatePermissionDTO) (*dto.PermissionDTO, ErrorUtil) {
 	// Verificar se já existe uma permissão com o mesmo nome
 	existingPermission, err := s.repo.FindByName(permissionDTO.Name)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
+		return nil, ErrNotFound
 	}
 	if existingPermission != nil {
 		return nil, ErrPermissionNameInUse
 	}
 
 	newPermission := &model.Permission{
-		ID:          util.New(),
-		Name:        permissionDTO.Name,
-		Description: permissionDTO.Description,
+		ID:              util.New(),
+		CompanyGlobalID: permissionDTO.CompanyGlobalID,
+		Name:            permissionDTO.Name,
+		Description:     permissionDTO.Description,
 	}
 
 	if err := s.repo.Create(newPermission); err != nil {
-		return nil, err
+		return nil, ErrDatabase
 	}
 
 	return mapper.MapToPermissionDTO(newPermission), nil
 }
 
-func (s *permissionService) Update(permissionDTO dto.CreatePermissionDTO, permissionID string) (*dto.PermissionDTO, error) {
+func (s *permissionService) Update(permissionDTO dto.CreatePermissionDTO, permissionID string) (*dto.PermissionDTO, ErrorUtil) {
 	existingPermission, err := s.repo.FindByID(permissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
-		return nil, err
+		return nil, ErrDatabase
 	}
 	if existingPermission == nil {
 		return nil, ErrNotFound
@@ -70,7 +71,7 @@ func (s *permissionService) Update(permissionDTO dto.CreatePermissionDTO, permis
 	if permissionDTO.Name != existingPermission.Name {
 		permissionWithNewName, err := s.repo.FindByName(permissionDTO.Name)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
+			return nil, ErrNotFound
 		}
 		if permissionWithNewName != nil {
 			return nil, ErrPermissionNameInUse
@@ -81,44 +82,42 @@ func (s *permissionService) Update(permissionDTO dto.CreatePermissionDTO, permis
 	existingPermission.Description = permissionDTO.Description
 
 	if err := s.repo.Update(existingPermission); err != nil {
-		return nil, err
+		return nil, ErrDatabase
 	}
 
 	return mapper.MapToPermissionDTO(existingPermission), nil
 }
 
-func (s *permissionService) Delete(permissionID string) error {
+func (s *permissionService) Delete(permissionID string) ErrorUtil {
 	err := s.repo.Delete(permissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ErrNotFound
 		}
-		return err
+		return ErrDatabase
 	}
 	return nil
 }
 
-func (s *permissionService) FindByID(permissionID string) (*dto.PermissionDTO, error) {
+func (s *permissionService) FindByID(permissionID string) (*dto.PermissionDTO, ErrorUtil) {
 	permission, err := s.repo.FindByID(permissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
-		return nil, err
+		return nil, ErrDatabase
 	}
 	return mapper.MapToPermissionDTO(permission), nil
 }
 
-func (s *permissionService) FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.PermissionDTO], error) {
+func (s *permissionService) FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.PermissionDTO], ErrorUtil) {
 	permissions, totalItems, err := s.repo.FindAll(filters, page, pageSize)
 	if err != nil {
-		return nil, err
+		return nil, ErrDatabase
 	}
 
 	permissionPtrs := make([]*model.Permission, len(permissions))
-	for i := range permissions {
-		permissionPtrs[i] = permissions[i]
-	}
+	copy(permissionPtrs, permissions)
 	permissionDTOs := mapper.MapToPermissionDTOs(permissionPtrs)
 	totalPages := 0
 	if pageSize > 0 {

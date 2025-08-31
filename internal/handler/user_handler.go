@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"fmt"
 	"go-sales/internal/config"
 	"go-sales/internal/dto"
@@ -10,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 // UserHandler encapsula a dependência do serviço de usuário.
@@ -44,25 +44,11 @@ func (h *UserHandler) Create(c *gin.Context) {
 	// 2. Chamar a Camada de Serviço
 	createdUser, err := h.service.Create(*createUserDTO)
 	if err != nil {
-		// 3. Tratar Erros da Camada de Serviço
-		// Verifica se o erro é um erro de negócio conhecido (email duplicado).
-		if errors.Is(err, service.ErrEmailInUse) {
-			// Retorna um erro 409 (Conflict).
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-			return
-		}
-
-		if errors.Is(err, service.ErrCompanyGlobalNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-		if errors.Is(err, service.ErrRoleNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Para qualquer outro erro, consideramos um erro interno do servidor.
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+		log.Error().
+			Str("error_code", err.Code()). // imprime o código do erro, que você define em cada erro
+			Err(err).
+			Msg("UserHandler.Create error")
+		c.JSON(err.HTTPStatusCode(), gin.H{"error": err.Error(), "code": err.Code()})
 		return
 	}
 
@@ -89,18 +75,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 	// 2. Chamar a Camada de Serviço
 	updatedUser, err := h.service.Update(*updateUserDTO, idStr)
 	if err != nil {
-		// 3. Tratar Erros da Camada de Serviço
-		if errors.Is(err, service.ErrNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-		if errors.Is(err, service.ErrEmailInUse) {
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Para qualquer outro erro não esperado, retorne um erro genérico.
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+		c.JSON(err.HTTPStatusCode(), gin.H{"error": err.Error(), "code": err.Code()})
 		return
 	}
 
@@ -115,8 +90,8 @@ func (h *UserHandler) Delete(c *gin.Context) {
 	if err := h.service.Delete(idStr); err != nil {
 		// 3. Tratar Erros da Camada de Serviço
 		// Verifica se o erro é o nosso erro de "não encontrado".
-		if errors.Is(err, service.ErrNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		if err != nil {
+			c.JSON(err.HTTPStatusCode(), gin.H{"error": err.Error(), "code": err.Code()})
 			return
 		}
 
@@ -146,8 +121,8 @@ func (h *UserHandler) FindAll(c *gin.Context) {
 	// 2. Chamar a Camada de Serviço, passando os filtros.
 	// 3. Chama o serviço.
 	paginatedResult, err := h.service.FindAll(filters, page, pageSize)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+	if customErr, ok := err.(service.ErrorUtil); ok {
+		c.JSON(customErr.HTTPStatusCode(), gin.H{"error": customErr.Error(), "code": customErr.Code()})
 		return
 	}
 
@@ -162,8 +137,8 @@ func (h *UserHandler) FindByID(c *gin.Context) {
 	user, err := h.service.FindByID(idStr)
 	if err != nil {
 		// 3. Tratar Erros da Camada de Serviço
-		if errors.Is(err, service.ErrNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		if err != nil {
+			c.JSON(err.HTTPStatusCode(), gin.H{"error": err.Error(), "code": err.Code()})
 			return
 		}
 

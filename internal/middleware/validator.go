@@ -1,23 +1,52 @@
 package middleware
 
 import (
+	"errors"
 	"go-sales/pkg/util"
 	"net/http"
 
+	"reflect"
+	"strings"
+
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
-// ValidateDTO valida o corpo da requisição com base na struct DTO fornecida.
 func ValidateDTO(dto interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// É importante passar um ponteiro para a struct para que ShouldBindJSON possa preenchê-la.
-		// No entanto, a validação funciona com o tipo, então não precisamos de um novo ponteiro a cada chamada.
 		if err := c.ShouldBindJSON(dto); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			var ve validator.ValidationErrors
+			if errors.As(err, &ve) {
+				out := make([]map[string]string, len(ve))
+				typ := reflect.TypeOf(dto)
+				// Se dto for ponteiro, pega o elemento
+				if typ.Kind() == reflect.Ptr {
+					typ = typ.Elem()
+				}
+				for i, fe := range ve {
+					// Busca o nome da propriedade JSON
+					field, ok := typ.FieldByName(fe.StructField())
+					jsonTag := ""
+					if ok {
+						jsonTag = field.Tag.Get("json")
+					}
+					jsonName := strings.Split(jsonTag, ",")[0]
+					if jsonName == "" {
+						jsonName = fe.Field() // fallback para o nome Go
+					}
+					out[i] = map[string]string{
+						"field":   jsonName,
+						"message": fe.Error(),
+					}
+				}
+				c.JSON(http.StatusBadRequest, gin.H{"errors": out, "code": "validation_error"})
+				c.Abort()
+				return
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "code": "validation_error"})
 			c.Abort()
 			return
 		}
-		// Coloca o DTO validado no contexto para que o handler possa usá-lo.
 		c.Set("validatedDTO", dto)
 		c.Next()
 	}
@@ -28,12 +57,10 @@ func ValidateUUID(paramName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		idStr := c.Param(paramName)
 		if _, err := util.Parse(idStr); err != nil {
-			// O parâmetro não é um UUID válido.
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid " + paramName + " format. Must be a valid UUID."})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid " + paramName + " format. Must be a valid UUID.", "code": "invalid_id_format"})
 			c.Abort()
 			return
 		}
-		// O UUID é válido, continua para o próximo handler.
 		c.Next()
 	}
 }
@@ -42,7 +69,7 @@ func ValidateCGC(paramName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cgcStr := c.Param(paramName)
 		if !util.IsValidCGC(cgcStr) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid " + paramName + " format. Must be a valid CGC."})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid " + paramName + " format. Must be a valid CGC.", "code": "invalid_cgc_format"})
 			c.Abort()
 			return
 		}

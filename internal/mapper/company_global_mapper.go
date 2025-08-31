@@ -19,10 +19,15 @@ func MapToCompanyGlobalDTO(company *model.CompanyGlobal) *dto.CompanyGlobalDTO {
 		deletedAt = &company.DeletedAt.Time
 	}
 
+	var description *string
+	if company.Description != "" {
+		description = &company.Description
+	}
+
 	return &dto.CompanyGlobalDTO{
 		ID:          company.ID,
 		Name:        company.Name,
-		Description: company.Description,
+		Description: description,
 		CGC:         company.CGC,
 		Enabled:     company.Enabled,
 		CreatedAt:   company.CreatedAt,

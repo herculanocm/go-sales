@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"fmt"
 	"go-sales/internal/config"
 	"go-sales/internal/dto"
@@ -11,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 type CompanyGlobalHandler struct {
@@ -27,30 +27,17 @@ func NewCompanyGlobalHandler(service service.CompanyGlobalServiceInterface, cfg 
 
 // Create é o método do handler para criar uma nova empresa global.
 func (h *CompanyGlobalHandler) Create(c *gin.Context) {
-	validatedDTO, exists := c.Get("validatedDTO")
-	if !exists {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Validated DTO not found"})
-		return
-	}
+	log.Info().Msg("Creating a new company global")
 
-	// Faz a asserção de tipo
-	createCompanyDTO, ok := validatedDTO.(*dto.CreateCompanyGlobalDTO)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid DTO type"})
+	createCompanyDTO, utilError := GetValidatedDTO[*dto.CreateCompanyGlobalDTO](c, "validatedDTO")
+	if utilError != nil {
+		HandleError(utilError, "CompanyGlobalHandler.Create - Error getting validated DTO", c)
 		return
 	}
 
 	createdCompany, err := h.service.Create(*createCompanyDTO)
 	if err != nil {
-		// 3. Tratar Erros da Camada de Serviço
-		// Verifica se o erro é um erro de negócio conhecido (CGC duplicado).
-		if errors.Is(err, service.ErrCGCInUse) {
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Para qualquer outro erro, consideramos um erro interno do servidor.
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+		HandleError(err, "CompanyGlobalHandler.Create error", c)
 		return
 	}
 
@@ -61,40 +48,24 @@ func (h *CompanyGlobalHandler) Create(c *gin.Context) {
 // Update é o método do handler para atualizar uma empresa global.
 func (h *CompanyGlobalHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
-	validatedDTO, exists := c.Get("validatedDTO")
-	if !exists {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Validated DTO not found"})
-		return
-	}
-
-	// Faz a asserção de tipo
-	updateCompanyDTO, ok := validatedDTO.(*dto.CreateCompanyGlobalDTO)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid DTO type"})
+	log.Info().Str("id", idStr).Msg("Updating company global")
+	updateCompanyDTO, utilError := GetValidatedDTO[*dto.CreateCompanyGlobalDTO](c, "validatedDTO")
+	if utilError != nil {
+		HandleError(utilError, "CompanyGlobalHandler.Update - Error getting validated DTO", c)
 		return
 	}
 
 	id, err := util.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
+		HandleError(customError, "CompanyGlobalHandler.Update - Error parsing ID", c)
 		return
 	}
 
 	// 2. Chamar a Camada de Serviço
-	updatedCompany, err := h.service.Update(*updateCompanyDTO, id)
-	if err != nil {
-		// 3. Tratar Erros da Camada de Serviço
-		if errors.Is(err, service.ErrNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-		if errors.Is(err, service.ErrCGCInUse) {
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Para qualquer outro erro não esperado, retorne um erro genérico.
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+	updatedCompany, errUpdate := h.service.Update(*updateCompanyDTO, id)
+	if errUpdate != nil {
+		HandleError(errUpdate, "CompanyGlobalHandler.Update error", c)
 		return
 	}
 
@@ -105,23 +76,17 @@ func (h *CompanyGlobalHandler) Update(c *gin.Context) {
 // Delete é o método do handler para apagar uma empresa global.
 func (h *CompanyGlobalHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
-
+	log.Info().Str("id", idStr).Msg("Deleting company global")
 	id, err := util.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
+		HandleError(customError, "CompanyGlobalHandler.Delete - Error parsing ID", c)
 		return
 	}
 
 	// 2. Chamar a Camada de Serviço
 	if err := h.service.Delete(id); err != nil {
-		// 3. Tratar Erros da Camada de Serviço
-		if errors.Is(err, service.ErrNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Para qualquer outro erro, consideramos um erro interno do servidor.
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+		HandleError(err, "CompanyGlobalHandler.Delete error", c)
 		return
 	}
 
@@ -131,17 +96,11 @@ func (h *CompanyGlobalHandler) Delete(c *gin.Context) {
 
 func (h *CompanyGlobalHandler) FindByCGC(c *gin.Context) {
 	cgcStr := c.Param("cgc")
-
+	log.Info().Str("cgc", cgcStr).Msg("Finding company global by CGC")
 	company, err := h.service.FindByCGC(cgcStr)
-	if err != nil {
-		// 3. Tratar Erros da Camada de Serviço
-		if errors.Is(err, service.ErrNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
 
-		// Para qualquer outro erro, consideramos um erro interno do servidor.
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+	if err != nil {
+		HandleError(err, "CompanyGlobalHandler.FindByCGC error", c)
 		return
 	}
 
@@ -151,23 +110,17 @@ func (h *CompanyGlobalHandler) FindByCGC(c *gin.Context) {
 
 func (h *CompanyGlobalHandler) FindByID(c *gin.Context) {
 	idStr := c.Param("id")
-
+	log.Info().Str("id", idStr).Msg("Finding company global by ID")
 	id, err := util.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
+		HandleError(customError, "CompanyGlobalHandler.FindByID - Error parsing ID", c)
 		return
 	}
 
-	company, err := h.service.FindByID(id)
-	if err != nil {
-		// 3. Tratar Erros da Camada de Serviço
-		if errors.Is(err, service.ErrNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Para qualquer outro erro, consideramos um erro interno do servidor.
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+	company, errFind := h.service.FindByID(id)
+	if errFind != nil {
+		HandleError(errFind, "CompanyGlobalHandler.FindByID error", c)
 		return
 	}
 
@@ -176,6 +129,7 @@ func (h *CompanyGlobalHandler) FindByID(c *gin.Context) {
 }
 
 func (h *CompanyGlobalHandler) FindAll(c *gin.Context) {
+	log.Info().Msg("Fetching all company globals")
 	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if err != nil || page < 1 {
 		page = 1
@@ -191,10 +145,12 @@ func (h *CompanyGlobalHandler) FindAll(c *gin.Context) {
 
 	// 2. Chamar a Camada de Serviço, passando os filtros.
 	// 3. Chama o serviço.
-	paginatedResult, err := h.service.FindAll(filters, page, pageSize)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+	paginatedResult, customErr := h.service.FindAll(filters, page, pageSize)
+	if customErr != nil {
+
+		HandleError(customErr, "CompanyGlobalHandler.FindAll error", c)
 		return
+
 	}
 
 	// 4. Retorna o resultado paginado.

@@ -3,6 +3,6 @@ Content-Type: application/json
 
 {
 	"name": "Company Default",
-	"cgc": "10734930000122",
-    "enabled": true
+	"cgc": "12345678000191",
+	"enabled": true
 }

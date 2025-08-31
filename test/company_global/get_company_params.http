@@ -1,1 +1,1 @@
-GET http://localhost:8081/api/v1/company-globals?cgc=10734930000122
+GET http://localhost:8081/api/v1/company-globals?enabled=true

@@ -14,11 +14,11 @@ import (
 )
 
 type UserServiceInterface interface {
-	Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, error)
-	Update(userDTO dto.CreateUserDTO, userID string) (*dto.UserDTO, error)
-	Delete(userID string) error
-	FindByID(userID string) (*dto.UserDTO, error)
-	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.UserDTO], error)
+	Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, ErrorUtil)
+	Update(userDTO dto.CreateUserDTO, userID string) (*dto.UserDTO, ErrorUtil)
+	Delete(userID string) ErrorUtil
+	FindByID(userID string) (*dto.UserDTO, ErrorUtil)
+	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.UserDTO], ErrorUtil)
 }
 
 // userService é a implementação concreta.
@@ -35,21 +35,21 @@ func NewUserService(repo database.UserRepositoryInterface, repoCompany database.
 }
 
 // Create contém a lógica de negócios para criar um novo usuário.
-func (s *userService) Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, error) {
+func (s *userService) Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, ErrorUtil) {
 	// 1. Verificar se o email já existe (lógica de negócio).
-	existingUser, err := s.repo.FindByEmail(userDTO.Email)
+	existingUser, err := s.repo.EmailExists(userDTO.Email, userDTO.CompanyGlobalID.String())
 	if err != nil {
 		// Um erro inesperado do banco de dados.
-		return nil, err
+		return nil, ErrDatabase
 	}
-	if existingUser != nil {
+	if existingUser {
 		return nil, ErrEmailInUse
 	}
 
 	// 2. Hashear a senha (lógica de negócio de segurança).
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userDTO.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, err
+		return nil, ErrInternalServer
 	}
 
 	existingCompanyGlobal, err := s.repoCompany.FindByID(userDTO.CompanyGlobalID)
@@ -63,7 +63,7 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, error) {
 	// 1. Buscar as roles que serão associadas.
 	roles, err := s.repoRole.FindAllByIDs(userDTO.RoleIDs)
 	if err != nil {
-		return nil, err // Erro de banco de dados
+		return nil, ErrDatabase // Erro de banco de dados
 	}
 	// Validação importante: garantir que todas as roles solicitadas foram encontradas.
 	if len(roles) != len(userDTO.RoleIDs) {
@@ -82,7 +82,7 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, error) {
 
 	// 4. Chamar o repositório para persistir o usuário.
 	if err := s.repo.Create(newUser); err != nil {
-		return nil, err
+		return nil, ErrDatabase
 	}
 
 	// 4. Associar as Roles na tabela de junção (user_roles).
@@ -90,7 +90,7 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, error) {
 	if err := s.repo.AssociateRoles(newUser, roles); err != nil {
 		// Em um cenário real, você poderia querer deletar o usuário recém-criado
 		// para não deixar dados inconsistentes (transação).
-		return nil, err
+		return nil, ErrDatabase
 	}
 
 	// 5. Retornar o usuário criado (sem a senha).
@@ -98,7 +98,7 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, error) {
 	return mapper.MapToUserDTO(newUser), nil
 }
 
-func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*dto.UserDTO, error) {
+func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*dto.UserDTO, ErrorUtil) {
 	// 1. Buscar o usuário existente.
 	existingUser, err := s.repo.FindByID(userID)
 	if err != nil {
@@ -108,7 +108,7 @@ func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*dto.Use
 			return nil, ErrNotFound
 		}
 		// Para qualquer outro erro do banco de dados, apenas repasse.
-		return nil, err
+		return nil, ErrDatabase
 	}
 
 	// A verificação de 'existingUser == nil' se torna redundante se o repositório
@@ -121,7 +121,7 @@ func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*dto.Use
 	if userDTO.Email != existingUser.Email {
 		userWithNewEmail, err := s.repo.FindByEmail(userDTO.Email)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err // Erro de banco de dados
+			return nil, ErrDatabase // Erro de banco de dados
 		}
 		if userWithNewEmail != nil {
 			return nil, ErrEmailInUse
@@ -137,7 +137,7 @@ func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*dto.Use
 
 	// 4. Chamar o repositório para persistir as alterações.
 	if err := s.repo.Update(existingUser); err != nil {
-		return nil, err
+		return nil, ErrDatabase
 	}
 
 	// 5. Retornar o usuário atualizado.
@@ -145,31 +145,31 @@ func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*dto.Use
 	return mapper.MapToUserDTO(existingUser), nil
 }
 
-func (s *userService) Delete(id string) error {
+func (s *userService) Delete(id string) ErrorUtil {
 
 	err := s.repo.Delete(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ErrNotFound // Retorne um erro específico se o usuário não for encontrado.
 		}
-		return err // Retorne outros erros do banco de dados.
+		return ErrDatabase // Retorne outros erros do banco de dados.
 	}
 	return nil // Retorno nil indica sucesso na exclusão.
 }
 
-func (s *userService) FindByID(userID string) (*dto.UserDTO, error) {
+func (s *userService) FindByID(userID string) (*dto.UserDTO, ErrorUtil) {
 	user, err := s.repo.FindByID(userID)
 	if err != nil {
-		return nil, err
+		return nil, ErrDatabase
 	}
 	return mapper.MapToUserDTO(user), nil
 }
 
-func (s *userService) FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.UserDTO], error) {
+func (s *userService) FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.UserDTO], ErrorUtil) {
 	// 1. Chamar o repositório para buscar os usuários.
 	users, totalItems, err := s.repo.FindAll(filters, page, pageSize)
 	if err != nil {
-		return nil, err
+		return nil, ErrDatabase
 	}
 
 	userPtrs := make([]*model.User, len(users))

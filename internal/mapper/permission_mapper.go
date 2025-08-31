@@ -20,12 +20,13 @@ func MapToPermissionDTO(permission *model.Permission) *dto.PermissionDTO {
 	}
 
 	return &dto.PermissionDTO{
-		ID:          permission.ID,
-		Name:        permission.Name,
-		Description: permission.Description,
-		CreatedAt:   permission.CreatedAt,
-		UpdatedAt:   permission.UpdatedAt,
-		DeletedAt:   deletedAt,
+		ID:              permission.ID,
+		Name:            permission.Name,
+		CompanyGlobalID: permission.CompanyGlobalID,
+		Description:     permission.Description,
+		CreatedAt:       permission.CreatedAt,
+		UpdatedAt:       permission.UpdatedAt,
+		DeletedAt:       deletedAt,
 	}
 }
 

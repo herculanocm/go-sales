@@ -1,0 +1,9 @@
+PUT http://localhost:8081/api/v1/company-globals/3924a513-9e1c-46ef-969c-1cef6b582a5d
+Content-Type: application/json
+
+{
+    "id": "3924a513-9e1c-46ef-969c-1cef6b582a5d",
+	"name": "Company Default",
+	"cgc": "12345678000195",
+	"enabled": true
+}

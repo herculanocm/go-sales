@@ -9,6 +9,7 @@ import (
 	"go-sales/pkg/util"
 	"math"
 
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
 
@@ -16,12 +17,12 @@ type CompanyGlobalService struct {
 	repo database.CompanyGlobalRepositoryInterface
 }
 type CompanyGlobalServiceInterface interface {
-	Create(companyDTO dto.CreateCompanyGlobalDTO) (*dto.CompanyGlobalDTO, error)
-	Update(companyDTO dto.CreateCompanyGlobalDTO, id util.UUID) (*dto.CompanyGlobalDTO, error)
-	Delete(id util.UUID) error
-	FindByID(id util.UUID) (*dto.CompanyGlobalDTO, error)
-	FindByCGC(cgc string) (*dto.CompanyGlobalDTO, error)
-	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.CompanyGlobalDTO], error)
+	Create(companyDTO dto.CreateCompanyGlobalDTO) (*dto.CompanyGlobalDTO, ErrorUtil)
+	Update(companyDTO dto.CreateCompanyGlobalDTO, id util.UUID) (*dto.CompanyGlobalDTO, ErrorUtil)
+	Delete(id util.UUID) ErrorUtil
+	FindByID(id util.UUID) (*dto.CompanyGlobalDTO, ErrorUtil)
+	FindByCGC(cgc string) (*dto.CompanyGlobalDTO, ErrorUtil)
+	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.CompanyGlobalDTO], ErrorUtil)
 }
 
 func NewCompanyGlobalService(repo database.CompanyGlobalRepositoryInterface) CompanyGlobalServiceInterface {
@@ -30,13 +31,21 @@ func NewCompanyGlobalService(repo database.CompanyGlobalRepositoryInterface) Com
 	}
 }
 
-func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*dto.CompanyGlobalDTO, error) {
+func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*dto.CompanyGlobalDTO, ErrorUtil) {
 	// 1. Verificar se o CGC já existe (lógica de negócio).
 	existingCompany, err := s.repo.FindByCGC(companyDTO.CGC)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to create company")
+		return nil, GormDefaultError(err)
 	}
 	if existingCompany != nil {
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to create company")
 		return nil, ErrCGCInUse
 	}
 
@@ -51,37 +60,42 @@ func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*d
 
 	// 3. Chamar o repositório para persistir a empresa.
 	if err := s.repo.Create(newCompany); err != nil {
-		return nil, err
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to create company")
+		return nil, GormDefaultError(err)
 	}
 
 	return mapper.MapToCompanyGlobalDTO(newCompany), nil
 }
 
-func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id util.UUID) (*dto.CompanyGlobalDTO, error) {
+func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id util.UUID) (*dto.CompanyGlobalDTO, ErrorUtil) {
 	// 1. Verificar se a empresa existe.
-	existingCompany, err := s.repo.FindByID(id)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrNotFound
-		}
-
-		return nil, err
+	_, err := s.repo.FindByID(id)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to update company")
+		return nil, GormDefaultError(err)
 	}
 
-	// 2. Verificar se o CGC já existe (lógica de negócio).
-	if existingCompany.CGC != companyDTO.CGC {
-		otherCompany, err := s.repo.FindByCGC(companyDTO.CGC)
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
-		}
-		if otherCompany != nil {
-			return nil, ErrCGCInUse
-		}
+	otherCompany, err := s.repo.FindByCGC(companyDTO.CGC)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to update company")
+		return nil, GormDefaultError(err)
+	}
+	if otherCompany != nil && otherCompany.ID != id {
+		return nil, ErrCGCInUse
 	}
 
 	// 3. Mapear o DTO para o modelo do banco de dados.
 	updatedCompany := &model.CompanyGlobal{
-		ID:          util.New(),
+		ID:          id,
 		Name:        companyDTO.Name,
 		Description: companyDTO.Description,
 		CGC:         companyDTO.CGC,
@@ -90,53 +104,62 @@ func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id 
 
 	// 4. Chamar o repositório para persistir a empresa.
 	if err := s.repo.Update(updatedCompany); err != nil {
-		return nil, err
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to update company")
+
+		return nil, GormDefaultError(err)
 	}
 
 	return mapper.MapToCompanyGlobalDTO(updatedCompany), nil
 }
 
-func (s *CompanyGlobalService) Delete(id util.UUID) error {
+func (s *CompanyGlobalService) Delete(id util.UUID) ErrorUtil {
 	err := s.repo.Delete(id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ErrNotFound
-		}
-		return err
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to delete company")
+		return GormDefaultError(err)
 	}
 	return nil
 }
 
-func (s *CompanyGlobalService) FindByID(id util.UUID) (*dto.CompanyGlobalDTO, error) {
+func (s *CompanyGlobalService) FindByID(id util.UUID) (*dto.CompanyGlobalDTO, ErrorUtil) {
 	company, err := s.repo.FindByID(id)
 	if err != nil {
-		// AQUI ESTÁ A CORREÇÃO:
-		// Traduzimos o erro da camada de banco de dados para um erro da camada de serviço.
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrNotFound
-		}
-		// Para qualquer outro erro, nós o repassamos.
-		return nil, err
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to find company")
+		return nil, GormDefaultError(err)
 	}
 	return mapper.MapToCompanyGlobalDTO(company), nil
 }
 
-func (s *CompanyGlobalService) FindByCGC(cgc string) (*dto.CompanyGlobalDTO, error) {
+func (s *CompanyGlobalService) FindByCGC(cgc string) (*dto.CompanyGlobalDTO, ErrorUtil) {
 	company, err := s.repo.FindByCGC(cgc)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrNotFound
-		}
-		return nil, err
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to find company")
+		return nil, GormDefaultError(err)
 	}
 	return mapper.MapToCompanyGlobalDTO(company), nil
 }
 
 // ...
-func (s *CompanyGlobalService) FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.CompanyGlobalDTO], error) {
+func (s *CompanyGlobalService) FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.CompanyGlobalDTO], ErrorUtil) {
 	companies, totalItems, err := s.repo.FindAll(filters, page, pageSize)
 	if err != nil {
-		return nil, err
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to findAll company")
+		return nil, GormDefaultError(err)
 	}
 
 	// Convert []model.CompanyGlobal to []*model.CompanyGlobal

@@ -15,6 +15,7 @@ type UserRepositoryInterface interface {
 	Delete(id string) error
 	AssociateRoles(user *model.User, roles []*model.Role) error
 	FindAll(filters map[string][]string, page, pageSize int) ([]model.User, int64, error)
+	EmailExists(email, company_global_id string) (bool, error)
 }
 
 // userRepository é a implementação concreta que usa o GORM.
@@ -35,6 +36,14 @@ func (r *userRepository) FindByEmail(email string) (*model.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *userRepository) EmailExists(email, company_global_id string) (bool, error) {
+	var count int64
+	if err := r.db.Model(&model.User{}).Where("email_address = ? AND company_global_id = ?", email, company_global_id).Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 // Create salva um novo usuário no banco de dados.
