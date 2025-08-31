@@ -13,11 +13,11 @@ type CompanyGlobalRepository struct {
 
 type CompanyGlobalRepositoryInterface interface {
 	Create(company *model.CompanyGlobal) error
-	FindByID(id util.UUID) (*model.CompanyGlobal, error)
-	FindByCGC(cgc string) (*model.CompanyGlobal, error)
+	FindByID(id util.UUID, useUnscoped bool) (*model.CompanyGlobal, error)
+	FindByCGC(cgc string, useUnscoped bool) (*model.CompanyGlobal, error)
 	Update(company *model.CompanyGlobal) error
 	Delete(id util.UUID) error
-	FindAll(filters map[string][]string, page, pageSize int) ([]model.CompanyGlobal, int64, error)
+	FindAll(filters map[string][]string, page, pageSize int, useUnscoped bool) ([]model.CompanyGlobal, int64, error)
 }
 
 func NewCompanyGlobalRepository(db *gorm.DB) CompanyGlobalRepositoryInterface {
@@ -30,17 +30,25 @@ func (r *CompanyGlobalRepository) Create(company *model.CompanyGlobal) error {
 	return r.db.Create(company).Error
 }
 
-func (r *CompanyGlobalRepository) FindByID(id util.UUID) (*model.CompanyGlobal, error) {
+func (r *CompanyGlobalRepository) FindByID(id util.UUID, useUnscoped bool) (*model.CompanyGlobal, error) {
 	var company model.CompanyGlobal
-	if err := r.db.Where("id = ?", id).First(&company).Error; err != nil {
+	dbQuery := r.db
+	if useUnscoped {
+		dbQuery = dbQuery.Unscoped()
+	}
+	if err := dbQuery.Where("id = ?", id).First(&company).Error; err != nil {
 		return nil, err
 	}
 	return &company, nil
 }
 
-func (r *CompanyGlobalRepository) FindByCGC(cgc string) (*model.CompanyGlobal, error) {
+func (r *CompanyGlobalRepository) FindByCGC(cgc string, useUnscoped bool) (*model.CompanyGlobal, error) {
 	var company model.CompanyGlobal
-	if err := r.db.Where("cgc = ?", cgc).First(&company).Error; err != nil {
+	dbQuery := r.db
+	if useUnscoped {
+		dbQuery = dbQuery.Unscoped()
+	}
+	if err := dbQuery.Where("cgc = ?", cgc).First(&company).Error; err != nil {
 		return nil, err
 	}
 	return &company, nil
@@ -67,10 +75,14 @@ func (r *CompanyGlobalRepository) Delete(id util.UUID) error {
 
 	return nil
 }
-func (r *CompanyGlobalRepository) FindAll(filters map[string][]string, page, pageSize int) ([]model.CompanyGlobal, int64, error) {
+func (r *CompanyGlobalRepository) FindAll(filters map[string][]string, page, pageSize int, useUnscoped bool) ([]model.CompanyGlobal, int64, error) {
 	var companies []model.CompanyGlobal
 	var totalItems int64
 	query := r.db.Model(&model.CompanyGlobal{})
+
+	if useUnscoped {
+		query = query.Unscoped()
+	}
 
 	// Lista de colunas permitidas para filtragem para evitar injeção de SQL.
 	allowedFilters := map[string]bool{

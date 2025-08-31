@@ -42,7 +42,7 @@ func (s *roleService) Create(roleDTO dto.CreateRoleDTO) (*dto.RoleDTO, error) {
 		return nil, ErrRoleNameInUse
 	}
 
-	company, err := s.repoCompany.FindByID(roleDTO.CompanyGlobalID)
+	company, err := s.repoCompany.FindByID(roleDTO.CompanyGlobalID, false)
 	if err != nil {
 		return nil, err
 	}

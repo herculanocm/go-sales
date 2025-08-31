@@ -33,7 +33,7 @@ func NewCompanyGlobalService(repo database.CompanyGlobalRepositoryInterface) Com
 
 func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*dto.CompanyGlobalDTO, ErrorUtil) {
 	// 1. Verificar se o CGC já existe (lógica de negócio).
-	existingCompany, err := s.repo.FindByCGC(companyDTO.CGC)
+	existingCompany, err := s.repo.FindByCGC(companyDTO.CGC, true)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().
 			Err(err).
@@ -72,8 +72,8 @@ func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*d
 
 func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id util.UUID) (*dto.CompanyGlobalDTO, ErrorUtil) {
 	// 1. Verificar se a empresa existe.
-	_, err := s.repo.FindByID(id)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	_, err := s.repo.FindByID(id, false)
+	if err != nil {
 		log.Error().
 			Err(err).
 			Caller().
@@ -81,7 +81,7 @@ func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id 
 		return nil, GormDefaultError(err)
 	}
 
-	otherCompany, err := s.repo.FindByCGC(companyDTO.CGC)
+	otherCompany, err := s.repo.FindByCGC(companyDTO.CGC, true)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().
 			Err(err).
@@ -128,7 +128,7 @@ func (s *CompanyGlobalService) Delete(id util.UUID) ErrorUtil {
 }
 
 func (s *CompanyGlobalService) FindByID(id util.UUID) (*dto.CompanyGlobalDTO, ErrorUtil) {
-	company, err := s.repo.FindByID(id)
+	company, err := s.repo.FindByID(id, false)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -140,7 +140,7 @@ func (s *CompanyGlobalService) FindByID(id util.UUID) (*dto.CompanyGlobalDTO, Er
 }
 
 func (s *CompanyGlobalService) FindByCGC(cgc string) (*dto.CompanyGlobalDTO, ErrorUtil) {
-	company, err := s.repo.FindByCGC(cgc)
+	company, err := s.repo.FindByCGC(cgc, false)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -153,7 +153,7 @@ func (s *CompanyGlobalService) FindByCGC(cgc string) (*dto.CompanyGlobalDTO, Err
 
 // ...
 func (s *CompanyGlobalService) FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.CompanyGlobalDTO], ErrorUtil) {
-	companies, totalItems, err := s.repo.FindAll(filters, page, pageSize)
+	companies, totalItems, err := s.repo.FindAll(filters, page, pageSize, false)
 	if err != nil {
 		log.Error().
 			Err(err).

@@ -52,7 +52,7 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, ErrorUtil
 		return nil, ErrInternalServer
 	}
 
-	existingCompanyGlobal, err := s.repoCompany.FindByID(userDTO.CompanyGlobalID)
+	existingCompanyGlobal, err := s.repoCompany.FindByID(userDTO.CompanyGlobalID, false)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrCompanyGlobalNotFound
 	}
