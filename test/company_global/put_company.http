@@ -1,9 +1,30 @@
-PUT http://localhost:8081/api/v1/company-globals/a0f47461-c7aa-4502-abb0-46ab76a6f5d1
+PUT http://localhost:8081/api/v1/company-globals/81db540a-2f4e-4b33-be3c-2457f34ad66b
 Content-Type: application/json
 
 {
-	"name": "Company Default Edited",
-	"social_name": "Company Default Social Edited",
+	"name": "Company Default5",
+	"social_name": "Company Default Social5",
 	"cgc": "12345678000195",
-	"enabled": true
+	"enabled": true,
+	"address": {
+		"street": "123 Main St5",
+		"street_number": "456",
+		"street_complement": "Apt 789",
+		"city": "Metropolis",
+		"state": "NY",
+		"postal_code": "12345",
+		"country": "USA"
+	},
+	"contacts": [
+		{
+			"name": "John Doe5",
+			"email": "contact@company.com",
+			"phone": "+1-555-1234"
+		},
+		{
+			"name": "Jane Smith5",
+			"email": "contact@company.com",
+			"phone": "+1-555-5678"
+		}
+	]
 }

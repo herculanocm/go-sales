@@ -7,6 +7,92 @@ import (
 	"time"
 )
 
+func MapToCompanyGlobalAddress(addressDTO *dto.CreateCompanyGlobalAddressDTO) *model.CompanyGlobalAddress {
+	if addressDTO == nil {
+		return nil
+	}
+	return &model.CompanyGlobalAddress{
+		ID:               nil,
+		CompanyID:        nil,
+		Street:           addressDTO.Street,
+		StreetNumber:     addressDTO.StreetNumber,
+		StreetComplement: addressDTO.StreetComplement,
+		City:             addressDTO.City,
+		State:            addressDTO.State,
+		PostalCode:       addressDTO.PostalCode,
+		Country:          addressDTO.Country,
+	}
+}
+
+func MapToCompanyGlobalContact(contactDTO *dto.CreateCompanyGlobalContactDTO) *model.CompanyGlobalContact {
+	if contactDTO == nil {
+		return nil
+	}
+	return &model.CompanyGlobalContact{
+		ID:        nil,
+		CompanyID: nil,
+		Name:      contactDTO.Name,
+		Email:     contactDTO.Email,
+		Phone:     contactDTO.Phone,
+		CGC:       contactDTO.CGC,
+	}
+}
+
+func MapToCompanyGlobalContacts(contactDTOs []*dto.CreateCompanyGlobalContactDTO) []*model.CompanyGlobalContact {
+	if contactDTOs == nil {
+		return nil
+	}
+	contacts := make([]*model.CompanyGlobalContact, 0, len(contactDTOs))
+	for _, contactDTO := range contactDTOs {
+		if contact := MapToCompanyGlobalContact(contactDTO); contact != nil {
+			contacts = append(contacts, contact)
+		}
+	}
+	return contacts
+}
+
+func MapToCompanyGlobalAddressDTO(address *model.CompanyGlobalAddress) *dto.CompanyGlobalAddressDTO {
+	if address == nil {
+		return nil
+	}
+	return &dto.CompanyGlobalAddressDTO{
+		ID:               address.ID,
+		Street:           address.Street,
+		StreetNumber:     address.StreetNumber,
+		StreetComplement: address.StreetComplement,
+		City:             address.City,
+		State:            address.State,
+		PostalCode:       address.PostalCode,
+		Country:          address.Country,
+	}
+}
+
+func MapToCompanyGlobalContactDTO(contact *model.CompanyGlobalContact) *dto.CompanyGlobalContactDTO {
+	if contact == nil {
+		return nil
+	}
+	return &dto.CompanyGlobalContactDTO{
+		ID:    contact.ID,
+		Name:  contact.Name,
+		Email: contact.Email,
+		Phone: contact.Phone,
+		CGC:   contact.CGC,
+	}
+}
+
+func MapToCompanyGlobalContactDTOs(contacts []*model.CompanyGlobalContact) []*dto.CompanyGlobalContactDTO {
+	if contacts == nil {
+		return nil
+	}
+	dtos := make([]*dto.CompanyGlobalContactDTO, 0, len(contacts))
+	for _, contact := range contacts {
+		if dto := MapToCompanyGlobalContactDTO(contact); dto != nil {
+			dtos = append(dtos, dto)
+		}
+	}
+	return dtos
+}
+
 func MapToCompanyGlobalDTO(company *model.CompanyGlobal) *dto.CompanyGlobalDTO {
 
 	if company == nil {
@@ -27,6 +113,9 @@ func MapToCompanyGlobalDTO(company *model.CompanyGlobal) *dto.CompanyGlobalDTO {
 		Description: company.Description,
 		CGC:         company.CGC,
 		Enabled:     company.Enabled,
+		Email:       company.Email,
+		Address:     MapToCompanyGlobalAddressDTO(company.Address),
+		Contacts:    MapToCompanyGlobalContactDTOs(company.Contacts),
 		CreatedAt:   company.CreatedAt,
 		UpdatedAt:   company.UpdatedAt,
 		DeletedAt:   deletedAt,
@@ -54,16 +143,19 @@ func MapToCreateCompanyGlobal(companyDTO *dto.CreateCompanyGlobalDTO) *model.Com
 	}
 
 	return &model.CompanyGlobal{
-		ID:          util.New(),
+		ID:          nil,
 		Name:        companyDTO.Name,
 		SocialName:  companyDTO.SocialName,
 		Description: companyDTO.Description,
 		CGC:         companyDTO.CGC,
 		Enabled:     companyDTO.Enabled,
+		Email:       companyDTO.Email,
+		Address:     MapToCompanyGlobalAddress(companyDTO.Address),
+		Contacts:    MapToCompanyGlobalContacts(companyDTO.Contacts),
 	}
 }
 
-func MapToUpdateCompanyGlobal(companyDTO *dto.CreateCompanyGlobalDTO, id util.UUID) *model.CompanyGlobal {
+func MapToUpdateCompanyGlobal(companyDTO *dto.CreateCompanyGlobalDTO, id *util.UUID) *model.CompanyGlobal {
 	if companyDTO == nil {
 		return nil
 	}
@@ -75,5 +167,8 @@ func MapToUpdateCompanyGlobal(companyDTO *dto.CreateCompanyGlobalDTO, id util.UU
 		Description: companyDTO.Description,
 		CGC:         companyDTO.CGC,
 		Enabled:     companyDTO.Enabled,
+		Email:       companyDTO.Email,
+		Address:     MapToCompanyGlobalAddress(companyDTO.Address),
+		Contacts:    MapToCompanyGlobalContacts(companyDTO.Contacts),
 	}
 }

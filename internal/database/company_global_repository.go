@@ -28,7 +28,32 @@ func NewCompanyGlobalRepository(db *gorm.DB) CompanyGlobalRepositoryInterface {
 }
 
 func (r *CompanyGlobalRepository) Create(company *model.CompanyGlobal) error {
-	return r.db.Create(company).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Garantir que os CompanyID dos filhos estejam definidos para que o GORM
+		// possa persistir as associações ao criar a company (evita inserts duplicados).
+
+		company.ID = util.NewPtr()
+
+		if company.Address != nil {
+			company.Address.ID = util.NewPtr()
+			company.Address.CompanyID = company.ID
+		}
+
+		for _, contact := range company.Contacts {
+			if contact == nil {
+				continue
+			}
+			contact.ID = util.NewPtr()
+			contact.CompanyID = company.ID
+		}
+
+		// Cria a company (o GORM irá criar as associações já presentes na struct).
+		if err := tx.Create(company).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 func (r *CompanyGlobalRepository) FindByID(id util.UUID, useUnscoped bool) (*model.CompanyGlobal, error) {
@@ -37,7 +62,7 @@ func (r *CompanyGlobalRepository) FindByID(id util.UUID, useUnscoped bool) (*mod
 	if useUnscoped {
 		dbQuery = dbQuery.Unscoped()
 	}
-	if err := dbQuery.Where("id = ?", id).First(&company).Error; err != nil {
+	if err := dbQuery.Preload("Address").Preload("Contacts").Where("id = ?", id).First(&company).Error; err != nil {
 		return nil, err
 	}
 	return &company, nil
@@ -49,15 +74,69 @@ func (r *CompanyGlobalRepository) FindByCGC(cgc string, useUnscoped bool) (*mode
 	if useUnscoped {
 		dbQuery = dbQuery.Unscoped()
 	}
-	if err := dbQuery.Where("cgc = ?", cgc).First(&company).Error; err != nil {
+	if err := dbQuery.Preload("Address").Preload("Contacts").Where("cgc = ?", cgc).First(&company).Error; err != nil {
 		return nil, err
 	}
 	return &company, nil
 }
 
 func (r *CompanyGlobalRepository) Update(company *model.CompanyGlobal) error {
-	return r.db.Save(company).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Carrega company e associações atuais
+		var existing model.CompanyGlobal
+		if err := tx.Preload("Address").Preload("Contacts").Where("id = ?", company.ID).First(&existing).Error; err != nil {
+			return err
+		}
+
+		if company.Address != nil {
+			company.Address.ID = util.NewPtr()
+			company.Address.CompanyID = company.ID
+		}
+
+		for _, contact := range company.Contacts {
+			if contact == nil {
+				continue
+			}
+			contact.ID = util.NewPtr()
+			contact.CompanyID = company.ID
+		}
+
+		// Atualiza os campos da tabela principal
+		if err := tx.Model(&existing).Select(
+			"name", "social_name", "description", "cgc", "email", "enabled",
+		).Updates(company).Error; err != nil {
+			return err
+		}
+
+		// Delete all addresses (hard delete) to avoid GORM setting FK to NULL
+		if err := tx.Unscoped().Where("company_id = ?", company.ID).Delete(&model.CompanyGlobalAddress{}).Error; err != nil {
+			return err
+		}
+		// Recreate address if veio no payload
+		if company.Address != nil {
+			if err := tx.Create(company.Address).Error; err != nil {
+				return err
+			}
+		}
+
+		// Delete all contacts (hard delete) and recreate from payload
+		if err := tx.Unscoped().Where("company_id = ?", company.ID).Delete(&model.CompanyGlobalContact{}).Error; err != nil {
+			return err
+		}
+		for _, contact := range company.Contacts {
+			if contact == nil {
+				continue
+			}
+			if err := tx.Create(contact).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
+
+// ...existing code...
 
 func (r *CompanyGlobalRepository) Delete(id util.UUID) error {
 	// Executa a operação de delete e armazena o resultado.
@@ -87,9 +166,11 @@ func (r *CompanyGlobalRepository) FindAll(filters map[string][]string, page, pag
 
 	// Lista de colunas permitidas para filtragem para evitar injeção de SQL.
 	allowedFilters := map[string]bool{
-		"name":    true,
-		"cgc":     true,
-		"enabled": true,
+		"name":        true,
+		"cgc":         true,
+		"enabled":     true,
+		"email":       true,
+		"social_name": true,
 	}
 
 	for key, value := range filters {
@@ -99,6 +180,8 @@ func (r *CompanyGlobalRepository) FindAll(filters map[string][]string, page, pag
 			// Para outros, usamos '=' para buscas exatas.
 			if key == "name" {
 				query = query.Where("name ILIKE ?", "%"+value[0]+"%") // ILIKE é case-insensitive (PostgreSQL)
+			} else if key == "social_name" {
+				query = query.Where("social_name ILIKE ?", "%"+value[0]+"%")
 			} else {
 				query = query.Where(key+" = ?", value[0])
 			}
@@ -114,7 +197,7 @@ func (r *CompanyGlobalRepository) FindAll(filters map[string][]string, page, pag
 	offset := (page - 1) * pageSize
 
 	// 3. Aplica a paginação (limit e offset) e busca os itens da página.
-	if err := query.Offset(offset).Limit(pageSize).Find(&companies).Error; err != nil {
+	if err := query.Preload("Address").Preload("Contacts").Offset(offset).Limit(pageSize).Find(&companies).Error; err != nil {
 		return nil, 0, err
 	}
 

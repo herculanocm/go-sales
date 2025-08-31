@@ -5,5 +5,26 @@ Content-Type: application/json
 	"name": "Company Default2",
 	"social_name": "Company Default Social2",
 	"cgc": "12345678000195",
-	"enabled": true
+	"enabled": true,
+	"address": {
+		"street": "123 Main St",
+		"street_number": "456",
+		"street_complement": "Apt 789",
+		"city": "Metropolis",
+		"state": "NY",
+		"postal_code": "12345",
+		"country": "USA"
+	},
+	"contacts": [
+		{
+			"name": "John Doe",
+			"email": "contact@company.com",
+			"phone": "+1-555-1234"
+		},
+		{
+			"name": "Jane Smith",
+			"email": "contact@company.com",
+			"phone": "+1-555-5678"
+		}
+	]
 }

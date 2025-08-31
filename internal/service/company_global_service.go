@@ -96,12 +96,12 @@ func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id 
 			Msg("failed to update company")
 		return nil, GormDefaultError(err)
 	}
-	if otherCompany != nil && otherCompany.ID != id {
+	if otherCompany != nil && *otherCompany.ID != id {
 		return nil, ErrCGCInUse
 	}
 
 	// 3. Mapear o DTO para o modelo do banco de dados.
-	updatedCompany := mapper.MapToUpdateCompanyGlobal(&companyDTO, id)
+	updatedCompany := mapper.MapToUpdateCompanyGlobal(&companyDTO, &id)
 
 	updatedCompany.CreatedAt = original.CreatedAt
 
