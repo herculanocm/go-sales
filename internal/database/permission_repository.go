@@ -9,11 +9,11 @@ import (
 
 // PermissionRepositoryInterface define os métodos para interagir com os dados de permission.
 type PermissionRepositoryInterface interface {
-	FindByID(id string) (*model.Permission, error)
-	FindByName(name string) (*model.Permission, error)
+	FindByID(id util.UUID) (*model.Permission, error)
+	FindByName(name string, companyGlobalID *util.UUID) (*model.Permission, error)
 	Create(permission *model.Permission) error
 	Update(permission *model.Permission) error
-	Delete(id string) error
+	Delete(id util.UUID) error
 	FindAll(filters map[string][]string, page, pageSize int) ([]*model.Permission, int64, error)
 	FindByIDs(ids []util.UUID) ([]*model.Permission, error)
 }
@@ -28,7 +28,7 @@ func NewPermissionRepository(db *gorm.DB) PermissionRepositoryInterface {
 	return &permissionRepository{db: db}
 }
 
-func (r *permissionRepository) FindByID(id string) (*model.Permission, error) {
+func (r *permissionRepository) FindByID(id util.UUID) (*model.Permission, error) {
 	var permission model.Permission
 	if err := r.db.Where("id = ?", id).First(&permission).Error; err != nil {
 		return nil, err
@@ -36,15 +36,16 @@ func (r *permissionRepository) FindByID(id string) (*model.Permission, error) {
 	return &permission, nil
 }
 
-func (r *permissionRepository) FindByName(name string) (*model.Permission, error) {
+func (r *permissionRepository) FindByName(name string, companyGlobalID *util.UUID) (*model.Permission, error) {
 	var permission model.Permission
-	if err := r.db.Where("name = ?", name).First(&permission).Error; err != nil {
+	if err := r.db.Where("name = ? AND company_global_id = ?", name, companyGlobalID).First(&permission).Error; err != nil {
 		return nil, err
 	}
 	return &permission, nil
 }
 
 func (r *permissionRepository) Create(permission *model.Permission) error {
+	permission.ID = util.NewPtr()
 	return r.db.Create(permission).Error
 }
 
@@ -52,8 +53,8 @@ func (r *permissionRepository) Update(permission *model.Permission) error {
 	return r.db.Save(permission).Error
 }
 
-func (r *permissionRepository) Delete(id string) error {
-	result := r.db.Where("id = ?", id).Delete(&model.Permission{})
+func (r *permissionRepository) Delete(id util.UUID) error {
+	result := r.db.Unscoped().Where("id = ?", id).Delete(&model.Permission{})
 	if result.Error != nil {
 		return result.Error
 	}

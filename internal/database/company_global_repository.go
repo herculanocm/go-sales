@@ -19,12 +19,25 @@ type CompanyGlobalRepositoryInterface interface {
 	Delete(id util.UUID) error
 	FindAll(filters map[string][]string, page, pageSize int, useUnscoped bool) ([]model.CompanyGlobal, int64, error)
 	Restore(id util.UUID) error
+	Exists(id util.UUID, useUnscoped bool) (bool, error)
 }
 
 func NewCompanyGlobalRepository(db *gorm.DB) CompanyGlobalRepositoryInterface {
 	return &CompanyGlobalRepository{
 		db: db,
 	}
+}
+
+func (r *CompanyGlobalRepository) Exists(id util.UUID, useUnscoped bool) (bool, error) {
+	var count int64
+	dbQuery := r.db
+	if useUnscoped {
+		dbQuery = dbQuery.Unscoped()
+	}
+	if err := dbQuery.Model(&model.CompanyGlobal{}).Where("id = ?", id).Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 func (r *CompanyGlobalRepository) Create(company *model.CompanyGlobal) error {

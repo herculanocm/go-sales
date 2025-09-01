@@ -3,7 +3,6 @@ package mapper
 import (
 	"go-sales/internal/dto"
 	"go-sales/internal/model"
-	"time"
 )
 
 // MapToPermissionDTO converte um model.Permission para dto.PermissionDTO.
@@ -12,21 +11,14 @@ func MapToPermissionDTO(permission *model.Permission) *dto.PermissionDTO {
 		return nil
 	}
 
-	var deletedAt *time.Time
-	if permission.DeletedAt.Valid {
-		deletedAt = &permission.DeletedAt.Time
-	} else {
-		deletedAt = nil
-	}
-
 	return &dto.PermissionDTO{
-		ID:              permission.ID,
-		Name:            permission.Name,
+		ID:   permission.ID,
+		Name: permission.Name,
+
 		CompanyGlobalID: permission.CompanyGlobalID,
 		Description:     permission.Description,
 		CreatedAt:       permission.CreatedAt,
 		UpdatedAt:       permission.UpdatedAt,
-		DeletedAt:       deletedAt,
 	}
 }
 
@@ -44,4 +36,31 @@ func MapToPermissionDTOs(permissions []*model.Permission) *[]dto.PermissionDTO {
 		}
 	}
 	return &result
+}
+
+func MapToPermission(dto *dto.CreatePermissionDTO) *model.Permission {
+	if dto == nil {
+		return nil
+	}
+
+	return &model.Permission{
+		ID:              nil,
+		CompanyGlobalID: dto.CompanyGlobalID,
+		Name:            dto.Name,
+		Description:     dto.Description,
+	}
+}
+
+func MapToPermissions(dtos []*dto.CreatePermissionDTO) []*model.Permission {
+	if dtos == nil {
+		return nil
+	}
+
+	permissions := make([]*model.Permission, 0, len(dtos))
+	for _, dto := range dtos {
+		if permission := MapToPermission(dto); permission != nil {
+			permissions = append(permissions, permission)
+		}
+	}
+	return permissions
 }

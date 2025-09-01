@@ -17,9 +17,10 @@ import (
 func SetupPermissionRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	// 1. Inicializar o Repositório
 	permissionRepo := database.NewPermissionRepository(db)
+	companyGlobalRepo := database.NewCompanyGlobalRepository(db)
 
 	// 2. Inicializar o Serviço
-	permissionService := service.NewPermissionService(permissionRepo)
+	permissionService := service.NewPermissionService(permissionRepo, companyGlobalRepo)
 
 	// 3. Inicializar o Handler
 	permissionHandler := handler.NewPermissionHandler(permissionService, cfg)

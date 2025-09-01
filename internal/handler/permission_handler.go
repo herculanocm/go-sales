@@ -5,6 +5,7 @@ import (
 	"go-sales/internal/config"
 	"go-sales/internal/dto"
 	"go-sales/internal/service"
+	"go-sales/pkg/util"
 	"net/http"
 	"strconv"
 
@@ -29,27 +30,16 @@ func NewPermissionHandler(s service.PermissionServiceInterface, cfg *config.Conf
 // Create cria uma nova permissão.
 func (h *PermissionHandler) Create(c *gin.Context) {
 	log.Info().Msg("Creating a new permission")
-	validatedDTO, exists := c.Get("validatedDTO")
-	if !exists {
-		log.Error().Msg("Permission.Create - Validated DTO not found")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Validated DTO not found"})
-		return
-	}
 
-	createPermissionDTO, ok := validatedDTO.(*dto.CreatePermissionDTO)
-	if !ok {
-		log.Error().Msg("Permission.Create - Invalid DTO type")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid DTO type"})
+	createPermissionDTO, utilError := GetValidatedDTO[*dto.CreatePermissionDTO](c, "validatedDTO")
+	if utilError != nil {
+		HandleError(utilError, "PermissionHandler.Create - Error getting validated DTO", c)
 		return
 	}
 
 	createdPermission, err := h.service.Create(*createPermissionDTO)
 	if err != nil {
-		log.Error().
-			Str("error_code", err.Code()). // imprime o código do erro, que você define em cada erro
-			Err(err).
-			Msg("UserHandler.Create error")
-		c.JSON(err.HTTPStatusCode(), gin.H{"error": err.Error(), "code": err.Code()})
+		HandleError(err, "PermissionHandler.Create error", c)
 		return
 	}
 
@@ -60,27 +50,23 @@ func (h *PermissionHandler) Create(c *gin.Context) {
 func (h *PermissionHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 	log.Info().Str("permission_id", idStr).Msg("Updating permission")
-	validatedDTO, exists := c.Get("validatedDTO")
-	if !exists {
-		log.Error().Msg("Permission.Update - Validated DTO not found")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Validated DTO not found"})
+
+	updatePermissionDTO, utilError := GetValidatedDTO[*dto.CreatePermissionDTO](c, "validatedDTO")
+	if utilError != nil {
+		HandleError(utilError, "PermissionHandler.Update - Error getting validated DTO", c)
 		return
 	}
 
-	updatePermissionDTO, ok := validatedDTO.(*dto.CreatePermissionDTO)
-	if !ok {
-		log.Error().Msg("Permission.Update - Invalid DTO type")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid DTO type"})
-		return
-	}
-
-	updatedPermission, err := h.service.Update(*updatePermissionDTO, idStr)
+	id, err := util.Parse(idStr)
 	if err != nil {
-		log.Error().
-			Str("error_code", err.Code()). // imprime o código do erro, que você define em cada erro
-			Err(err).
-			Msg("UserHandler.Update error")
-		c.JSON(err.HTTPStatusCode(), gin.H{"error": err.Error(), "code": err.Code()})
+		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
+		HandleError(customError, "PermissionHandler.Update - Error parsing ID", c)
+		return
+	}
+
+	updatedPermission, errUpdate := h.service.Update(*updatePermissionDTO, id)
+	if errUpdate != nil {
+		HandleError(errUpdate, "PermissionHandler.Update error", c)
 		return
 	}
 
@@ -91,12 +77,16 @@ func (h *PermissionHandler) Update(c *gin.Context) {
 func (h *PermissionHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	log.Info().Str("permission_id", idStr).Msg("Deleting permission")
-	if err := h.service.Delete(idStr); err != nil {
-		log.Error().
-			Str("error_code", err.Code()). // imprime o código do erro, que você define em cada erro
-			Err(err).
-			Msg("UserHandler.Delete error")
-		c.JSON(err.HTTPStatusCode(), gin.H{"error": err.Error(), "code": err.Code()})
+
+	id, err := util.Parse(idStr)
+	if err != nil {
+		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
+		HandleError(customError, "PermissionHandler.Delete - Error parsing ID", c)
+		return
+	}
+
+	if err := h.service.Delete(id); err != nil {
+		HandleError(err, "PermissionHandler.Delete error", c)
 		return
 	}
 	c.JSON(http.StatusNoContent, nil)
@@ -114,14 +104,12 @@ func (h *PermissionHandler) FindAll(c *gin.Context) {
 		pageSize = h.cfg.AppDefaultAPIPageSize
 	}
 	filters := c.Request.URL.Query()
-	paginatedResult, err := h.service.FindAll(filters, page, pageSize)
-	if customErr, ok := err.(service.ErrorUtil); ok {
-		log.Error().
-			Str("error_code", customErr.Code()). // imprime o código do erro, que você define em cada erro
-			Err(customErr).
-			Msg("UserHandler.FindAll error")
-		c.JSON(customErr.HTTPStatusCode(), gin.H{"error": customErr.Error(), "code": customErr.Code()})
+	paginatedResult, customErr := h.service.FindAll(filters, page, pageSize)
+	if customErr != nil {
+
+		HandleError(customErr, "PermissionHandler.FindAll error", c)
 		return
+
 	}
 
 	c.JSON(http.StatusOK, paginatedResult)
@@ -131,13 +119,17 @@ func (h *PermissionHandler) FindAll(c *gin.Context) {
 func (h *PermissionHandler) FindByID(c *gin.Context) {
 	idStr := c.Param("id")
 	log.Info().Str("permission_id", idStr).Msg("Fetching permission by ID")
-	permission, err := h.service.FindByID(idStr)
+
+	id, err := util.Parse(idStr)
 	if err != nil {
-		log.Error().
-			Str("error_code", err.Code()). // imprime o código do erro, que você define em cada erro
-			Err(err).
-			Msg("UserHandler.Update error")
-		c.JSON(err.HTTPStatusCode(), gin.H{"error": err.Error(), "code": err.Code()})
+		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
+		HandleError(customError, "PermissionHandler.FindByID - Error parsing ID", c)
+		return
+	}
+
+	permission, errFind := h.service.FindByID(id)
+	if errFind != nil {
+		HandleError(errFind, "PermissionHandler.FindByID error", c)
 		return
 	}
 	c.JSON(http.StatusOK, permission)
