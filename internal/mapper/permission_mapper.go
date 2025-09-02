@@ -44,7 +44,7 @@ func MapToPermission(dto *dto.CreatePermissionDTO) *model.Permission {
 	}
 
 	return &model.Permission{
-		ID:              nil,
+		ID:              0,
 		CompanyGlobalID: dto.CompanyGlobalID,
 		Name:            dto.Name,
 		Description:     dto.Description,

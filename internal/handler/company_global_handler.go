@@ -28,7 +28,7 @@ func NewCompanyGlobalHandler(service service.CompanyGlobalServiceInterface, cfg 
 func (h *CompanyGlobalHandler) Restore(c *gin.Context) {
 	idStr := c.Param("id")
 	log.Info().Str("id", idStr).Msg("Restoring company global")
-	id, err := util.Parse(idStr)
+	id, err := util.ParseSnowflake(idStr)
 	if err != nil {
 		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
 		HandleError(customError, "CompanyGlobalHandler.Restore - Error parsing ID", c)
@@ -73,7 +73,7 @@ func (h *CompanyGlobalHandler) Update(c *gin.Context) {
 		return
 	}
 
-	id, err := util.Parse(idStr)
+	id, err := util.ParseSnowflake(idStr)
 	if err != nil {
 		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
 		HandleError(customError, "CompanyGlobalHandler.Update - Error parsing ID", c)
@@ -95,7 +95,7 @@ func (h *CompanyGlobalHandler) Update(c *gin.Context) {
 func (h *CompanyGlobalHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	log.Info().Str("id", idStr).Msg("Deleting company global")
-	id, err := util.Parse(idStr)
+	id, err := util.ParseSnowflake(idStr)
 	if err != nil {
 		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
 		HandleError(customError, "CompanyGlobalHandler.Delete - Error parsing ID", c)
@@ -129,7 +129,7 @@ func (h *CompanyGlobalHandler) FindByCGC(c *gin.Context) {
 func (h *CompanyGlobalHandler) FindByID(c *gin.Context) {
 	idStr := c.Param("id")
 	log.Info().Str("id", idStr).Msg("Finding company global by ID")
-	id, err := util.Parse(idStr)
+	id, err := util.ParseSnowflake(idStr)
 	if err != nil {
 		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
 		HandleError(customError, "CompanyGlobalHandler.FindByID - Error parsing ID", c)

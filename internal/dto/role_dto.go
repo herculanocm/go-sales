@@ -1,26 +1,25 @@
 package dto
 
 import (
-	"go-sales/pkg/util"
 	"time"
 )
 
 type CreateRoleDTO struct {
-	Name            string      `json:"name" binding:"required,max=255"`
-	Description     *string     `json:"description,omitempty" binding:"omitempty,max=4000"`
-	CompanyGlobalID util.UUID   `json:"companyGlobalId" binding:"required,uuid"`
-	PermissionIDs   []util.UUID `json:"permissionIds" binding:"dive,uuid"`
-	CanEdit         bool        `json:"canEdit"`
-	CanDelete       bool        `json:"canDelete"`
-	IsAdmin         bool        `json:"isAdmin"`
+	Name            string  `json:"name" binding:"required,max=255"`
+	Description     *string `json:"description,omitempty" binding:"omitempty,max=4000"`
+	CompanyGlobalID int64   `json:"companyGlobalId" binding:"required"`
+	PermissionIDs   []int64 `json:"permissionIds" binding:"dive"`
+	CanEdit         bool    `json:"canEdit"`
+	CanDelete       bool    `json:"canDelete"`
+	IsAdmin         bool    `json:"isAdmin"`
 }
 
 type RoleDTO struct {
-	ID              util.UUID       `json:"id"`
+	ID              int64           `json:"id"`
 	Name            string          `json:"name"`
 	Description     *string         `json:"description,omitempty"`
 	Permissions     []PermissionDTO `json:"permissions"`
-	CompanyGlobalID util.UUID       `json:"companyGlobalId"`
+	CompanyGlobalID int64           `json:"companyGlobalId"`
 
 	CanEdit   bool `json:"canEdit"`
 	CanDelete bool `json:"canDelete"`

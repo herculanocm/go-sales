@@ -1,6 +1,6 @@
 CREATE TABLE master.user_roles (
-    user_id UUID NOT NULL,
-    role_id UUID NOT NULL,
+    user_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
     -- A chave primária é composta para garantir que um usuário não possa ter a mesma role duas vezes.
     CONSTRAINT pk_user_roles PRIMARY KEY (user_id, role_id),
 

@@ -6,7 +6,6 @@ import (
 	"go-sales/internal/dto"
 	"go-sales/internal/mapper"
 	"go-sales/internal/model"
-	"go-sales/pkg/util"
 	"math"
 
 	"github.com/rs/zerolog/log"
@@ -18,12 +17,12 @@ type CompanyGlobalService struct {
 }
 type CompanyGlobalServiceInterface interface {
 	Create(companyDTO dto.CreateCompanyGlobalDTO) (*dto.CompanyGlobalDTO, ErrorUtil)
-	Update(companyDTO dto.CreateCompanyGlobalDTO, id util.UUID) (*dto.CompanyGlobalDTO, ErrorUtil)
-	Delete(id util.UUID) ErrorUtil
-	FindByID(id util.UUID) (*dto.CompanyGlobalDTO, ErrorUtil)
+	Update(companyDTO dto.CreateCompanyGlobalDTO, id int64) (*dto.CompanyGlobalDTO, ErrorUtil)
+	Delete(id int64) ErrorUtil
+	FindByID(id int64) (*dto.CompanyGlobalDTO, ErrorUtil)
 	FindByCGC(cgc string) (*dto.CompanyGlobalDTO, ErrorUtil)
 	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.CompanyGlobalDTO], ErrorUtil)
-	Restore(id util.UUID) ErrorUtil
+	Restore(id int64) ErrorUtil
 }
 
 func NewCompanyGlobalService(repo database.CompanyGlobalRepositoryInterface) CompanyGlobalServiceInterface {
@@ -32,7 +31,7 @@ func NewCompanyGlobalService(repo database.CompanyGlobalRepositoryInterface) Com
 	}
 }
 
-func (s *CompanyGlobalService) Restore(id util.UUID) ErrorUtil {
+func (s *CompanyGlobalService) Restore(id int64) ErrorUtil {
 	err := s.repo.Restore(id)
 	if err != nil {
 		log.Error().
@@ -77,7 +76,7 @@ func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*d
 	return mapper.MapToCompanyGlobalDTO(newCompany), nil
 }
 
-func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id util.UUID) (*dto.CompanyGlobalDTO, ErrorUtil) {
+func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id int64) (*dto.CompanyGlobalDTO, ErrorUtil) {
 	// 1. Verificar se a empresa existe.
 	original, err := s.repo.FindByID(id, false)
 	if err != nil {
@@ -96,12 +95,12 @@ func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id 
 			Msg("failed to update company")
 		return nil, GormDefaultError(err)
 	}
-	if otherCompany != nil && *otherCompany.ID != id {
+	if otherCompany != nil && otherCompany.ID != id {
 		return nil, ErrCGCInUse
 	}
 
 	// 3. Mapear o DTO para o modelo do banco de dados.
-	updatedCompany := mapper.MapToUpdateCompanyGlobal(&companyDTO, &id)
+	updatedCompany := mapper.MapToUpdateCompanyGlobal(&companyDTO, id)
 
 	updatedCompany.CreatedAt = original.CreatedAt
 
@@ -118,7 +117,7 @@ func (s *CompanyGlobalService) Update(companyDTO dto.CreateCompanyGlobalDTO, id 
 	return mapper.MapToCompanyGlobalDTO(updatedCompany), nil
 }
 
-func (s *CompanyGlobalService) Delete(id util.UUID) ErrorUtil {
+func (s *CompanyGlobalService) Delete(id int64) ErrorUtil {
 	err := s.repo.Delete(id)
 	if err != nil {
 		log.Error().
@@ -130,7 +129,7 @@ func (s *CompanyGlobalService) Delete(id util.UUID) ErrorUtil {
 	return nil
 }
 
-func (s *CompanyGlobalService) FindByID(id util.UUID) (*dto.CompanyGlobalDTO, ErrorUtil) {
+func (s *CompanyGlobalService) FindByID(id int64) (*dto.CompanyGlobalDTO, ErrorUtil) {
 	company, err := s.repo.FindByID(id, false)
 	if err != nil {
 		log.Error().

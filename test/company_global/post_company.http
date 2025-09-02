@@ -3,7 +3,7 @@ Content-Type: application/json
 
 {
 	"name": "Company Default2",
-	"social_name": "Company Default Social2",
+	"socialName": "Company Default Social2",
 	"cgc": "12345678000195",
 	"enabled": true,
 	"address": {
@@ -12,7 +12,7 @@ Content-Type: application/json
 		"street_complement": "Apt 789",
 		"city": "Metropolis",
 		"state": "NY",
-		"postal_code": "12345",
+		"postalCode": "12345",
 		"country": "USA"
 	},
 	"contacts": [

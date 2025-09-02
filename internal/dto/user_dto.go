@@ -1,23 +1,22 @@
 package dto
 
 import (
-	"go-sales/pkg/util"
 	"time"
 )
 
 type CreateUserDTO struct {
-	Name            string    `json:"name" binding:"required,min=2"`
-	Email           string    `json:"email" binding:"required,email"`
-	Password        string    `json:"password" binding:"required,min=8"`
-	CompanyGlobalID util.UUID `json:"companyGlobalId" binding:"required,uuid"`
+	Name            string `json:"name" binding:"required,min=2"`
+	Email           string `json:"email" binding:"required,email"`
+	Password        string `json:"password" binding:"required,min=8"`
+	CompanyGlobalID int64  `json:"companyGlobalId" binding:"required"`
 
 	// Adicionamos o campo para receber os IDs das roles.
 	// "dive" diz ao validador para aplicar a regra "uuid" em cada elemento do array.
-	RoleIDs []util.UUID `json:"roleIds" binding:"required,dive,uuid"`
+	RoleIDs []int64 `json:"roleIds" binding:"required,dive"`
 }
 
 type UserDTO struct {
-	ID            util.UUID        `json:"id"`
+	ID            int64            `json:"id"`
 	Name          string           `json:"name"`
 	Email         string           `json:"email"`
 	Password      string           `json:"password"`

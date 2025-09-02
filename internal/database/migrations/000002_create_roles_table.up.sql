@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS master.permissions (
-    id UUID NOT NULL,
-    company_global_id UUID NOT NULL,
+    id BIGINT NOT NULL,
+    company_global_id BIGINT NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -18,8 +18,8 @@ CREATE INDEX IF NOT EXISTS idx_permissions_deleted_at ON master.permissions (del
 
 
 CREATE TABLE IF NOT EXISTS master.roles (
-    id UUID NOT NULL,
-    company_global_id UUID NOT NULL,
+    id BIGINT NOT NULL,
+    company_global_id BIGINT NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     can_edit BOOLEAN NOT NULL DEFAULT TRUE,
@@ -40,8 +40,8 @@ CREATE INDEX IF NOT EXISTS idx_roles_company_global_id ON master.roles (company_
 CREATE INDEX IF NOT EXISTS idx_roles_deleted_at ON master.roles (deleted_at);
 
 CREATE TABLE IF NOT EXISTS master.roles_permissions (
-    role_id UUID NOT NULL,
-    permission_id UUID NOT NULL,
+    role_id BIGINT NOT NULL,
+    permission_id BIGINT NOT NULL,
     -- A chave primária é composta para garantir que uma role não possa ter a mesma permissão duas vezes.
     CONSTRAINT pk_role_permissions PRIMARY KEY (role_id, permission_id),
     CONSTRAINT fk_role_permissions_role

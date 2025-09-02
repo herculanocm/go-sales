@@ -57,7 +57,7 @@ func (h *PermissionHandler) Update(c *gin.Context) {
 		return
 	}
 
-	id, err := util.Parse(idStr)
+	id, err := util.ParseSnowflake(idStr)
 	if err != nil {
 		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
 		HandleError(customError, "PermissionHandler.Update - Error parsing ID", c)
@@ -78,7 +78,7 @@ func (h *PermissionHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	log.Info().Str("permission_id", idStr).Msg("Deleting permission")
 
-	id, err := util.Parse(idStr)
+	id, err := util.ParseSnowflake(idStr)
 	if err != nil {
 		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
 		HandleError(customError, "PermissionHandler.Delete - Error parsing ID", c)
@@ -120,7 +120,7 @@ func (h *PermissionHandler) FindByID(c *gin.Context) {
 	idStr := c.Param("id")
 	log.Info().Str("permission_id", idStr).Msg("Fetching permission by ID")
 
-	id, err := util.Parse(idStr)
+	id, err := util.ParseSnowflake(idStr)
 	if err != nil {
 		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
 		HandleError(customError, "PermissionHandler.FindByID - Error parsing ID", c)

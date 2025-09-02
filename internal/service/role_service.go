@@ -15,9 +15,9 @@ import (
 // RoleServiceInterface define a interface para a lógica de negócios de roles.
 type RoleServiceInterface interface {
 	Create(roleDTO dto.CreateRoleDTO) (*dto.RoleDTO, error)
-	Update(roleDTO dto.CreateRoleDTO, roleID util.UUID) (*dto.RoleDTO, error)
-	Delete(roleID util.UUID) error
-	FindByID(roleID util.UUID) (*dto.RoleDTO, error)
+	Update(roleDTO dto.CreateRoleDTO, roleID int64) (*dto.RoleDTO, error)
+	Delete(roleID int64) error
+	FindByID(roleID int64) (*dto.RoleDTO, error)
 	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.RoleDTO], error)
 }
 
@@ -60,7 +60,7 @@ func (s *roleService) Create(roleDTO dto.CreateRoleDTO) (*dto.RoleDTO, error) {
 	}
 
 	newRole := &model.Role{
-		ID:              util.New(),
+		ID:              util.NewSnowflake(),
 		Name:            roleDTO.Name,
 		Description:     roleDTO.Description,
 		CompanyGlobalID: roleDTO.CompanyGlobalID,
@@ -80,7 +80,7 @@ func (s *roleService) Create(roleDTO dto.CreateRoleDTO) (*dto.RoleDTO, error) {
 	return mapper.MapToRoleDTO(newRole), nil
 }
 
-func (s *roleService) Update(roleDTO dto.CreateRoleDTO, roleID util.UUID) (*dto.RoleDTO, error) {
+func (s *roleService) Update(roleDTO dto.CreateRoleDTO, roleID int64) (*dto.RoleDTO, error) {
 	existingRole, err := s.repo.FindByID(roleID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -112,7 +112,7 @@ func (s *roleService) Update(roleDTO dto.CreateRoleDTO, roleID util.UUID) (*dto.
 	return mapper.MapToRoleDTO(existingRole), nil
 }
 
-func (s *roleService) Delete(roleID util.UUID) error {
+func (s *roleService) Delete(roleID int64) error {
 	err := s.repo.Delete(roleID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -123,7 +123,7 @@ func (s *roleService) Delete(roleID util.UUID) error {
 	return nil
 }
 
-func (s *roleService) FindByID(roleID util.UUID) (*dto.RoleDTO, error) {
+func (s *roleService) FindByID(roleID int64) (*dto.RoleDTO, error) {
 	role, err := s.repo.FindByID(roleID)
 	if err != nil {
 		return nil, err

@@ -6,7 +6,6 @@ import (
 	"go-sales/internal/dto"
 	"go-sales/internal/mapper"
 	"go-sales/internal/model"
-	"go-sales/pkg/util"
 	"math"
 	"strings"
 
@@ -17,9 +16,9 @@ import (
 // PermissionServiceInterface define a interface para a lógica de negócios de permissões.
 type PermissionServiceInterface interface {
 	Create(permissionDTO dto.CreatePermissionDTO) (*dto.PermissionDTO, ErrorUtil)
-	Update(permissionDTO dto.CreatePermissionDTO, permissionID util.UUID) (*dto.PermissionDTO, ErrorUtil)
-	Delete(permissionID util.UUID) ErrorUtil
-	FindByID(permissionID util.UUID) (*dto.PermissionDTO, ErrorUtil)
+	Update(permissionDTO dto.CreatePermissionDTO, permissionID int64) (*dto.PermissionDTO, ErrorUtil)
+	Delete(permissionID int64) ErrorUtil
+	FindByID(permissionID int64) (*dto.PermissionDTO, ErrorUtil)
 	FindAll(filters map[string][]string, page, pageSize int) (*dto.PaginatedResponse[dto.PermissionDTO], ErrorUtil)
 }
 
@@ -38,12 +37,12 @@ func (s *permissionService) Create(permissionDTO dto.CreatePermissionDTO) (*dto.
 	// Verificar se já existe uma permissão com o mesmo nome
 	permissionDTO.Name = strings.ToUpper(strings.TrimSpace(permissionDTO.Name))
 
-	companyGlobalExists, err := s.repoCompanyGlobal.Exists(*permissionDTO.CompanyGlobalID, false)
+	companyGlobalExists, err := s.repoCompanyGlobal.Exists(permissionDTO.CompanyGlobalID, false)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().
 			Err(err).
 			Caller().
-			Str("company_global_id", permissionDTO.CompanyGlobalID.String()).
+			Str("company_global_id", string(permissionDTO.CompanyGlobalID)).
 			Msg("failed to check if company global exists")
 		return nil, GormDefaultError(err)
 	}
@@ -51,7 +50,7 @@ func (s *permissionService) Create(permissionDTO dto.CreatePermissionDTO) (*dto.
 		log.Error().
 			Err(err).
 			Caller().
-			Str("company_global_id", permissionDTO.CompanyGlobalID.String()).
+			Str("company_global_id", string(permissionDTO.CompanyGlobalID)).
 			Msg("failed to find existing company global")
 		return nil, ErrCompanyGlobalNotFound
 	}
@@ -62,7 +61,7 @@ func (s *permissionService) Create(permissionDTO dto.CreatePermissionDTO) (*dto.
 			Err(err).
 			Caller().
 			Str("permission_name", permissionDTO.Name).
-			Str("company_global_id", permissionDTO.CompanyGlobalID.String()).
+			Str("company_global_id", string(permissionDTO.CompanyGlobalID)).
 			Msg("failed to find existing permission")
 		return nil, GormDefaultError(err)
 	}
@@ -71,7 +70,7 @@ func (s *permissionService) Create(permissionDTO dto.CreatePermissionDTO) (*dto.
 			Err(err).
 			Caller().
 			Str("permission_name", permissionDTO.Name).
-			Str("company_global_id", permissionDTO.CompanyGlobalID.String()).
+			Str("company_global_id", string(permissionDTO.CompanyGlobalID)).
 			Msg("permission name is already in use")
 		return nil, ErrPermissionNameInUse
 	}
@@ -89,14 +88,14 @@ func (s *permissionService) Create(permissionDTO dto.CreatePermissionDTO) (*dto.
 	return mapper.MapToPermissionDTO(newPermission), nil
 }
 
-func (s *permissionService) Update(permissionDTO dto.CreatePermissionDTO, permissionID util.UUID) (*dto.PermissionDTO, ErrorUtil) {
+func (s *permissionService) Update(permissionDTO dto.CreatePermissionDTO, permissionID int64) (*dto.PermissionDTO, ErrorUtil) {
 	permissionDTO.Name = strings.ToUpper(strings.TrimSpace(permissionDTO.Name))
 	existingPermission, err := s.repo.FindByID(permissionID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().
 			Err(err).
 			Caller().
-			Str("permission_id", permissionID.String()).
+			Str("permission_id", string(permissionID)).
 			Msg("failed to find existing permission")
 		return nil, GormDefaultError(err)
 	}
@@ -104,7 +103,7 @@ func (s *permissionService) Update(permissionDTO dto.CreatePermissionDTO, permis
 		log.Error().
 			Err(err).
 			Caller().
-			Str("permission_id", permissionID.String()).
+			Str("permission_id", string(permissionID)).
 			Msg("permission not found")
 		return nil, ErrNotFound
 	}
@@ -115,16 +114,16 @@ func (s *permissionService) Update(permissionDTO dto.CreatePermissionDTO, permis
 			Err(err).
 			Caller().
 			Str("permission_name", permissionDTO.Name).
-			Str("company_global_id", permissionDTO.CompanyGlobalID.String()).
+			Str("company_global_id", string(permissionDTO.CompanyGlobalID)).
 			Msg("failed to find existing permission")
 		return nil, GormDefaultError(err)
 	}
-	if existingPermission != nil && *existingPermissionName.ID != permissionID {
+	if existingPermission != nil && existingPermissionName.ID != permissionID {
 		log.Error().
 			Err(err).
 			Caller().
 			Str("permission_name", permissionDTO.Name).
-			Str("company_global_id", permissionDTO.CompanyGlobalID.String()).
+			Str("company_global_id", string(permissionDTO.CompanyGlobalID)).
 			Msg("permission name is already in use")
 		return nil, ErrPermissionNameInUse
 	}
@@ -143,7 +142,7 @@ func (s *permissionService) Update(permissionDTO dto.CreatePermissionDTO, permis
 	return mapper.MapToPermissionDTO(existingPermission), nil
 }
 
-func (s *permissionService) Delete(permissionID util.UUID) ErrorUtil {
+func (s *permissionService) Delete(permissionID int64) ErrorUtil {
 	err := s.repo.Delete(permissionID)
 	if err != nil {
 		log.Error().
@@ -155,7 +154,7 @@ func (s *permissionService) Delete(permissionID util.UUID) ErrorUtil {
 	return nil
 }
 
-func (s *permissionService) FindByID(permissionID util.UUID) (*dto.PermissionDTO, ErrorUtil) {
+func (s *permissionService) FindByID(permissionID int64) (*dto.PermissionDTO, ErrorUtil) {
 	permission, err := s.repo.FindByID(permissionID)
 	if err != nil {
 		log.Error().

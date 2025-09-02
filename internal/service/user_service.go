@@ -37,7 +37,7 @@ func NewUserService(repo database.UserRepositoryInterface, repoCompany database.
 // Create contém a lógica de negócios para criar um novo usuário.
 func (s *userService) Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, ErrorUtil) {
 	// 1. Verificar se o email já existe (lógica de negócio).
-	existingUser, err := s.repo.EmailExists(userDTO.Email, userDTO.CompanyGlobalID.String())
+	existingUser, err := s.repo.EmailExists(userDTO.Email, userDTO.CompanyGlobalID)
 	if err != nil {
 		// Um erro inesperado do banco de dados.
 		return nil, ErrDatabase
@@ -72,7 +72,7 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, ErrorUtil
 
 	// 3. Mapear o DTO para o modelo do banco de dados.
 	newUser := &model.User{
-		ID:              util.New(),
+		ID:              util.NewSnowflake(),
 		Name:            userDTO.Name,
 		Email:           userDTO.Email,
 		Password:        string(hashedPassword),

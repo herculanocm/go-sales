@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"go-sales/pkg/util"
 	"time"
 )
 
@@ -35,26 +34,26 @@ type CreateCompanyGlobalContactDTO struct {
 }
 
 type CompanyGlobalAddressDTO struct {
-	ID               *util.UUID `json:"id"`
-	Street           string     `json:"street"`
-	StreetNumber     *string    `json:"streetNumber,omitempty"`
-	StreetComplement *string    `json:"streetComplement,omitempty"`
-	City             string     `json:"city"`
-	State            string     `json:"state"`
-	PostalCode       string     `json:"postalCode"`
-	Country          string     `json:"country"`
+	ID               int64   `json:"id"`
+	Street           string  `json:"street"`
+	StreetNumber     *string `json:"streetNumber,omitempty"`
+	StreetComplement *string `json:"streetComplement,omitempty"`
+	City             string  `json:"city"`
+	State            string  `json:"state"`
+	PostalCode       string  `json:"postalCode"`
+	Country          string  `json:"country"`
 }
 
 type CompanyGlobalContactDTO struct {
-	ID    *util.UUID `json:"id"`
-	Name  string     `json:"name"`
-	Email *string    `json:"email,omitempty"`
-	Phone *string    `json:"phone,omitempty"`
-	CGC   *string    `json:"cgc,omitempty"`
+	ID    int64   `json:"id"`
+	Name  string  `json:"name"`
+	Email *string `json:"email,omitempty"`
+	Phone *string `json:"phone,omitempty"`
+	CGC   *string `json:"cgc,omitempty"`
 }
 
 type CompanyGlobalDTO struct {
-	ID          *util.UUID                 `json:"id"`
+	ID          int64                      `json:"id"`
 	Name        string                     `json:"name"`
 	SocialName  string                     `json:"socialName"`
 	Description *string                    `json:"description,omitempty"`

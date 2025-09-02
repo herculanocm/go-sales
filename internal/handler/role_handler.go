@@ -63,7 +63,7 @@ func (h *RoleHandler) Update(c *gin.Context) {
 		return
 	}
 
-	id, err := util.Parse(idStr)
+	id, err := util.ParseSnowflake(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
@@ -87,7 +87,7 @@ func (h *RoleHandler) Update(c *gin.Context) {
 
 func (h *RoleHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := util.Parse(idStr)
+	id, err := util.ParseSnowflake(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
@@ -123,7 +123,7 @@ func (h *RoleHandler) FindAll(c *gin.Context) {
 
 func (h *RoleHandler) FindByID(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := util.Parse(idStr)
+	id, err := util.ParseSnowflake(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return

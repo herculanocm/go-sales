@@ -3,7 +3,6 @@ package mapper
 import (
 	"go-sales/internal/dto"
 	"go-sales/internal/model"
-	"go-sales/pkg/util"
 	"time"
 )
 
@@ -12,8 +11,8 @@ func MapToCompanyGlobalAddress(addressDTO *dto.CreateCompanyGlobalAddressDTO) *m
 		return nil
 	}
 	return &model.CompanyGlobalAddress{
-		ID:               nil,
-		CompanyID:        nil,
+		ID:               0,
+		CompanyID:        0,
 		Street:           addressDTO.Street,
 		StreetNumber:     addressDTO.StreetNumber,
 		StreetComplement: addressDTO.StreetComplement,
@@ -29,8 +28,8 @@ func MapToCompanyGlobalContact(contactDTO *dto.CreateCompanyGlobalContactDTO) *m
 		return nil
 	}
 	return &model.CompanyGlobalContact{
-		ID:        nil,
-		CompanyID: nil,
+		ID:        0,
+		CompanyID: 0,
 		Name:      contactDTO.Name,
 		Email:     contactDTO.Email,
 		Phone:     contactDTO.Phone,
@@ -143,7 +142,7 @@ func MapToCreateCompanyGlobal(companyDTO *dto.CreateCompanyGlobalDTO) *model.Com
 	}
 
 	return &model.CompanyGlobal{
-		ID:          nil,
+		ID:          0,
 		Name:        companyDTO.Name,
 		SocialName:  companyDTO.SocialName,
 		Description: companyDTO.Description,
@@ -155,7 +154,7 @@ func MapToCreateCompanyGlobal(companyDTO *dto.CreateCompanyGlobalDTO) *model.Com
 	}
 }
 
-func MapToUpdateCompanyGlobal(companyDTO *dto.CreateCompanyGlobalDTO, id *util.UUID) *model.CompanyGlobal {
+func MapToUpdateCompanyGlobal(companyDTO *dto.CreateCompanyGlobalDTO, id int64) *model.CompanyGlobal {
 	if companyDTO == nil {
 		return nil
 	}

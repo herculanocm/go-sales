@@ -2,19 +2,18 @@ package database
 
 import (
 	"go-sales/internal/model"
-	"go-sales/pkg/util"
 
 	"gorm.io/gorm"
 )
 
 // RoleRepositoryInterface define os métodos para interagir com os dados de role.
 type RoleRepositoryInterface interface {
-	FindAllByIDs(roleIDs []util.UUID) ([]*model.Role, error)
-	FindByID(id util.UUID) (*model.Role, error)
+	FindAllByIDs(roleIDs []int64) ([]*model.Role, error)
+	FindByID(id int64) (*model.Role, error)
 	FindByName(name string) (*model.Role, error)
 	Create(role *model.Role) error
 	Update(role *model.Role) error
-	Delete(id util.UUID) error
+	Delete(id int64) error
 	FindAll(filters map[string][]string, page, pageSize int) ([]model.Role, int64, error)
 	AssociatePermissions(role *model.Role, permissions []*model.Permission) error
 }
@@ -29,7 +28,7 @@ func NewRoleRepository(db *gorm.DB) RoleRepositoryInterface {
 	return &roleRepository{db: db}
 }
 
-func (r *roleRepository) FindByID(id util.UUID) (*model.Role, error) {
+func (r *roleRepository) FindByID(id int64) (*model.Role, error) {
 	var role model.Role
 	if err := r.db.Where("id = ?", id).First(&role).Error; err != nil {
 		return nil, err
@@ -53,7 +52,7 @@ func (r *roleRepository) Update(role *model.Role) error {
 	return r.db.Save(role).Error
 }
 
-func (r *roleRepository) Delete(id util.UUID) error {
+func (r *roleRepository) Delete(id int64) error {
 	result := r.db.Where("id = ?", id).Delete(&model.Role{})
 	if result.Error != nil {
 		return result.Error
@@ -96,7 +95,7 @@ func (r *roleRepository) FindAll(filters map[string][]string, page, pageSize int
 }
 
 // Busca todas as roles pelos IDs informados
-func (r *roleRepository) FindAllByIDs(ids []util.UUID) ([]*model.Role, error) {
+func (r *roleRepository) FindAllByIDs(ids []int64) ([]*model.Role, error) {
 	var roles []*model.Role
 	if err := r.db.Where("id IN ?", ids).Find(&roles).Error; err != nil {
 		return nil, err

@@ -13,13 +13,13 @@ type CompanyGlobalRepository struct {
 
 type CompanyGlobalRepositoryInterface interface {
 	Create(company *model.CompanyGlobal) error
-	FindByID(id util.UUID, useUnscoped bool) (*model.CompanyGlobal, error)
+	FindByID(id int64, useUnscoped bool) (*model.CompanyGlobal, error)
 	FindByCGC(cgc string, useUnscoped bool) (*model.CompanyGlobal, error)
 	Update(company *model.CompanyGlobal) error
-	Delete(id util.UUID) error
+	Delete(id int64) error
 	FindAll(filters map[string][]string, page, pageSize int, useUnscoped bool) ([]model.CompanyGlobal, int64, error)
-	Restore(id util.UUID) error
-	Exists(id util.UUID, useUnscoped bool) (bool, error)
+	Restore(id int64) error
+	Exists(id int64, useUnscoped bool) (bool, error)
 }
 
 func NewCompanyGlobalRepository(db *gorm.DB) CompanyGlobalRepositoryInterface {
@@ -28,7 +28,7 @@ func NewCompanyGlobalRepository(db *gorm.DB) CompanyGlobalRepositoryInterface {
 	}
 }
 
-func (r *CompanyGlobalRepository) Exists(id util.UUID, useUnscoped bool) (bool, error) {
+func (r *CompanyGlobalRepository) Exists(id int64, useUnscoped bool) (bool, error) {
 	var count int64
 	dbQuery := r.db
 	if useUnscoped {
@@ -45,10 +45,10 @@ func (r *CompanyGlobalRepository) Create(company *model.CompanyGlobal) error {
 		// Garantir que os CompanyID dos filhos estejam definidos para que o GORM
 		// possa persistir as associações ao criar a company (evita inserts duplicados).
 
-		company.ID = util.NewPtr()
+		company.ID = util.NewSnowflake()
 
 		if company.Address != nil {
-			company.Address.ID = util.NewPtr()
+			company.Address.ID = util.NewSnowflake()
 			company.Address.CompanyID = company.ID
 		}
 
@@ -56,7 +56,7 @@ func (r *CompanyGlobalRepository) Create(company *model.CompanyGlobal) error {
 			if contact == nil {
 				continue
 			}
-			contact.ID = util.NewPtr()
+			contact.ID = util.NewSnowflake()
 			contact.CompanyID = company.ID
 		}
 
@@ -69,7 +69,7 @@ func (r *CompanyGlobalRepository) Create(company *model.CompanyGlobal) error {
 	})
 }
 
-func (r *CompanyGlobalRepository) FindByID(id util.UUID, useUnscoped bool) (*model.CompanyGlobal, error) {
+func (r *CompanyGlobalRepository) FindByID(id int64, useUnscoped bool) (*model.CompanyGlobal, error) {
 	var company model.CompanyGlobal
 	dbQuery := r.db
 	if useUnscoped {
@@ -102,7 +102,7 @@ func (r *CompanyGlobalRepository) Update(company *model.CompanyGlobal) error {
 		}
 
 		if company.Address != nil {
-			company.Address.ID = util.NewPtr()
+			company.Address.ID = util.NewSnowflake()
 			company.Address.CompanyID = company.ID
 		}
 
@@ -110,7 +110,7 @@ func (r *CompanyGlobalRepository) Update(company *model.CompanyGlobal) error {
 			if contact == nil {
 				continue
 			}
-			contact.ID = util.NewPtr()
+			contact.ID = util.NewSnowflake()
 			contact.CompanyID = company.ID
 		}
 
@@ -151,7 +151,7 @@ func (r *CompanyGlobalRepository) Update(company *model.CompanyGlobal) error {
 
 // ...existing code...
 
-func (r *CompanyGlobalRepository) Delete(id util.UUID) error {
+func (r *CompanyGlobalRepository) Delete(id int64) error {
 	// Executa a operação de delete e armazena o resultado.
 	result := r.db.Where("id = ?", id).Delete(&model.CompanyGlobal{})
 
@@ -217,7 +217,7 @@ func (r *CompanyGlobalRepository) FindAll(filters map[string][]string, page, pag
 	return companies, totalItems, nil
 }
 
-func (r *CompanyGlobalRepository) Restore(id util.UUID) error {
+func (r *CompanyGlobalRepository) Restore(id int64) error {
 	result := r.db.Model(&model.CompanyGlobal{}).
 		Unscoped().
 		Where("id = ?", id).

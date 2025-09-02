@@ -1,11 +1,11 @@
 -- Cria a tabela dentro do schema 'master'.
 CREATE TABLE IF NOT EXISTS master.users (
-    id UUID NOT NULL,
+    id BIGINT NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     email_address VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT false,
-    company_global_id UUID NOT NULL,
+    company_global_id BIGINT NOT NULL,
     created_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ,
     deleted_at TIMESTAMPTZ,
