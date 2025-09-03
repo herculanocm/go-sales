@@ -66,6 +66,37 @@ func ValidateUUID(paramName string) gin.HandlerFunc {
 	}
 }
 
+// ValidateSnowflake verifica se um parâmetro da URL é um Snowflake válido.
+func ValidateSnowflake(paramName string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idStr := c.Param(paramName)
+		if _, err := util.ParseSnowflake(idStr); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid " + paramName + " format. Must be a valid Snowflake ID.",
+				"code":  "invalid_id_format",
+			})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
+func ValidateID(paramName string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idStr := c.Param(paramName)
+		if _, err := util.ParseSnowflake(idStr); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid " + paramName + " format. Must be a valid Snowflake ID.",
+				"code":  "invalid_id_format",
+			})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
 func ValidateCGC(paramName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cgcStr := c.Param(paramName)

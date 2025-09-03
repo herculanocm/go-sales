@@ -1,10 +1,11 @@
-PUT http://localhost:8081/api/v1/company-globals/81db540a-2f4e-4b33-be3c-2457f34ad66b
+PUT http://localhost:8081/api/v1/company-globals/1962696618291535872
 Content-Type: application/json
 
 {
 	"name": "Company Default5",
-	"social_name": "Company Default Social5",
+	"socialName": "Company Default Social5",
 	"cgc": "12345678000195",
+	"email": "contact@company.com",
 	"enabled": true,
 	"address": {
 		"street": "123 Main St5",
@@ -12,19 +13,21 @@ Content-Type: application/json
 		"street_complement": "Apt 789",
 		"city": "Metropolis",
 		"state": "NY",
-		"postal_code": "12345",
+		"postalCode": "12345",
 		"country": "USA"
 	},
 	"contacts": [
 		{
 			"name": "John Doe5",
 			"email": "contact@company.com",
-			"phone": "+1-555-1234"
+			"phone": "+1-555-1234",
+			"cgc": "12345678000191"
 		},
 		{
 			"name": "Jane Smith5",
 			"email": "contact@company.com",
-			"phone": "+1-555-5678"
+			"phone": "+1-555-5678",
+			"cgc": "12345678000192"
 		}
 	]
 }
