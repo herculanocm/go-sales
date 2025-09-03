@@ -28,6 +28,9 @@ CREATE TABLE IF NOT EXISTS master.company_global_contacts (
     cgc VARCHAR(40),
 
     CONSTRAINT pk_company_global_contacts PRIMARY KEY (id),
+    CONSTRAINT uk_company_global_contacts_email UNIQUE (company_id, email),
+    CONSTRAINT uk_company_global_contacts_cgc UNIQUE (company_id, cgc),
+    CONSTRAINT uk_company_global_contacts_phone UNIQUE (company_id, phone),
     CONSTRAINT fk_company_global_contacts_company_id FOREIGN KEY (company_id)
         REFERENCES master.company_globals(id) ON DELETE CASCADE
 );
@@ -46,6 +49,7 @@ CREATE TABLE IF NOT EXISTS master.company_global_addresses (
     country VARCHAR(100) NOT NULL,
 
     CONSTRAINT pk_company_global_addresses PRIMARY KEY (id),
+    CONSTRAINT uk_company_global_postal_code UNIQUE (company_id, postal_code),
     CONSTRAINT fk_company_global_addresses_company_id FOREIGN KEY (company_id)
         REFERENCES master.company_globals(id) ON DELETE CASCADE
 );

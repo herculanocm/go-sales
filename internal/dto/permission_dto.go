@@ -14,7 +14,7 @@ type PermissionDTO struct {
 	ID              int64     `json:"id"`
 	CompanyGlobalID int64     `json:"companyGlobalID"`
 	Name            string    `json:"name"`
-	Description     *string   `json:"description"`
+	Description     *string   `json:"description,omitempty"`
 	CreatedAt       time.Time `json:"createdAt"`
 	UpdatedAt       time.Time `json:"updatedAt"`
 }

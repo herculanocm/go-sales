@@ -45,6 +45,15 @@ func (s *CompanyGlobalService) Restore(id int64) ErrorUtil {
 
 func (s *CompanyGlobalService) Create(companyDTO dto.CreateCompanyGlobalDTO) (*dto.CompanyGlobalDTO, ErrorUtil) {
 	// 1. Verificar se o CGC já existe (lógica de negócio).
+
+	if !companyDTO.ValidateContacts() {
+		log.Error().
+			Err(ErrCompanyGlobalContactsFieldValidationUnique).
+			Caller().
+			Msg("failed contacts validation")
+		return nil, ErrCompanyGlobalContactsFieldValidationUnique
+	}
+
 	existingCompany, err := s.repo.FindByCGC(companyDTO.CGC, true)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().

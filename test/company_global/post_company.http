@@ -6,6 +6,7 @@ Content-Type: application/json
 	"socialName": "Company Default Social2",
 	"cgc": "12345678000191",
 	"enabled": true,
+	"email": "contact@company.com",
 	"address": {
 		"street": "123 Main St",
 		"street_number": "456",
@@ -18,13 +19,15 @@ Content-Type: application/json
 	"contacts": [
 		{
 			"name": "John Doe",
-			"email": "contact@company.com",
-			"phone": "+1-555-1234"
+			"email": "contact1@company.com",
+			"phone": "+1-555-1234",
+			"cgc": "12345678000190"
 		},
 		{
 			"name": "Jane Smith",
-			"email": "contact@company.com",
-			"phone": "+1-555-5678"
+			"email": "contact2@company.com",
+			"phone": "+1-555-5678",
+			"cgc": "12345678000191"
 		}
 	]
 }

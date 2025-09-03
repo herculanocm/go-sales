@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS master.users (
     deleted_at TIMESTAMPTZ,
 
     CONSTRAINT pk_users PRIMARY KEY (id),
+    CONSTRAINT uk_users_email_company_global UNIQUE (company_global_id, email_address),
 
     -- A referência da chave estrangeira também deve incluir o schema.
     CONSTRAINT fk_users_company_globals
@@ -20,6 +21,4 @@ CREATE TABLE IF NOT EXISTS master.users (
         ON UPDATE CASCADE
 );
 
--- Os índices também devem ser criados no schema correto.
-CREATE UNIQUE INDEX uk_users_email_company_global ON master.users (company_global_id, email_address);
 CREATE INDEX idx_users_deleted_at ON master.users (deleted_at);

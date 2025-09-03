@@ -56,6 +56,7 @@ var (
 		httpStatusCode: http.StatusConflict,
 		code:           "cgc_in_use",
 	}
+
 	// ErrNotFound é retornado quando uma entidade não é encontrada.
 	ErrNotFound = &AbstractError{
 		error:          "entity not found",
@@ -121,6 +122,12 @@ var (
 		error:          "database error",
 		httpStatusCode: http.StatusInternalServerError,
 		code:           "database_error",
+	}
+
+	ErrCompanyGlobalContactsFieldValidationUnique = &AbstractError{
+		error:          "the properties cgc, phone and email must be unique in contacts",
+		httpStatusCode: http.StatusConflict,
+		code:           "company_global_contacts_field_validation_unique",
 	}
 )
 
