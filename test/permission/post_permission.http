@@ -2,5 +2,6 @@ POST http://localhost:8081/api/v1/permissions
 Content-Type: application/json
 
 {
-	"name": "testee4"
+	"name": "CAN_EDIT_PARAMS_ROLE",
+	"companyGlobalID": 1963354596233486336
 }

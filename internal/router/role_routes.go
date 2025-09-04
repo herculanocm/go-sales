@@ -22,8 +22,8 @@ func SetupRoleRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	roleHandler := handler.NewRoleHandler(roleService, cfg)
 
 	router.POST("/roles", middleware.ValidateDTO(reflect.TypeOf(dto.CreateRoleDTO{})), roleHandler.Create)
-	router.PUT("/roles/:id", middleware.ValidateUUID("id"), middleware.ValidateDTO(reflect.TypeOf(dto.CreateRoleDTO{})), roleHandler.Update)
-	router.DELETE("/roles/:id", middleware.ValidateUUID("id"), roleHandler.Delete)
-	router.GET("/roles/:id", middleware.ValidateUUID("id"), roleHandler.FindByID)
+	router.PUT("/roles/:id", middleware.ValidateID("id"), middleware.ValidateDTO(reflect.TypeOf(dto.CreateRoleDTO{})), roleHandler.Update)
+	router.DELETE("/roles/:id", middleware.ValidateID("id"), roleHandler.Delete)
+	router.GET("/roles/:id", middleware.ValidateID("id"), roleHandler.FindByID)
 	router.GET("/roles", roleHandler.FindAll)
 }

@@ -7,7 +7,7 @@ import (
 type CreatePermissionDTO struct {
 	Name            string  `json:"name" binding:"required,max=255"`
 	CompanyGlobalID int64   `json:"companyGlobalID" binding:"required"`
-	Description     *string `json:"description" binding:"max=4000"`
+	Description     *string `json:"description" binding:"omitempty,max=4000"`
 }
 
 type PermissionDTO struct {

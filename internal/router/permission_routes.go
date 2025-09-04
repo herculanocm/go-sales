@@ -27,9 +27,9 @@ func SetupPermissionRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Con
 
 	// 4. Definir as rotas para /permissions
 	router.POST("/permissions", middleware.ValidateDTO(reflect.TypeOf(dto.CreatePermissionDTO{})), permissionHandler.Create)
-	router.PUT("/permissions/:id", middleware.ValidateUUID("id"), middleware.ValidateDTO(reflect.TypeOf(dto.CreatePermissionDTO{})), permissionHandler.Update)
-	router.DELETE("/permissions/:id", middleware.ValidateUUID("id"), permissionHandler.Delete)
-	router.GET("/permissions/:id", middleware.ValidateUUID("id"), permissionHandler.FindByID)
+	router.PUT("/permissions/:id", middleware.ValidateID("id"), middleware.ValidateDTO(reflect.TypeOf(dto.CreatePermissionDTO{})), permissionHandler.Update)
+	router.DELETE("/permissions/:id", middleware.ValidateID("id"), permissionHandler.Delete)
+	router.GET("/permissions/:id", middleware.ValidateID("id"), permissionHandler.FindByID)
 	router.GET("/permissions", permissionHandler.FindAll)
 
 	// adding restore point for soft delete

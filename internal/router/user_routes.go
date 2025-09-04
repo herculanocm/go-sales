@@ -28,8 +28,8 @@ func SetupUserRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 
 	// 4. Definir as rotas para /users
 	router.POST("/users", middleware.ValidateDTO(reflect.TypeOf(dto.CreateUserDTO{})), userHandler.Create)
-	router.PUT("/users/:id", middleware.ValidateUUID("id"), middleware.ValidateDTO(reflect.TypeOf(dto.CreateUserDTO{})), userHandler.Update)
-	router.DELETE("/users/:id", middleware.ValidateUUID("id"), userHandler.Delete)
-	router.GET("/users/:id", middleware.ValidateUUID("id"), userHandler.FindByID)
+	router.PUT("/users/:id", middleware.ValidateID("id"), middleware.ValidateDTO(reflect.TypeOf(dto.CreateUserDTO{})), userHandler.Update)
+	router.DELETE("/users/:id", middleware.ValidateID("id"), userHandler.Delete)
+	router.GET("/users/:id", middleware.ValidateID("id"), userHandler.FindByID)
 	router.GET("/users", userHandler.FindAll)
 }

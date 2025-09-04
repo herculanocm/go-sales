@@ -1,7 +1,8 @@
-PUT http://localhost:8081/api/v1/permissions/2a3091a9-6e5a-4338-ae1e-2767a61db455
+PUT http://localhost:8081/api/v1/permissions/1963417001361711104
 Content-Type: application/json
 
 {
-	"name": "testee",
-    "description": "A description"
+	"name": "CAN_EDIT_PARAMS",
+	"description": "A description",
+	"companyGlobalID": 1963354596233486336
 }

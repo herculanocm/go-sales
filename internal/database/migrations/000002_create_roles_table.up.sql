@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS master.permissions (
     description TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMPTZ,
     CONSTRAINT pk_permissions PRIMARY KEY (id),
     CONSTRAINT uk_permissions_name_company_global_id UNIQUE (company_global_id, name),
     CONSTRAINT fk_permissions_company_global_id_company_global
@@ -13,11 +12,6 @@ CREATE TABLE IF NOT EXISTS master.permissions (
         REFERENCES master.company_globals(id)
         ON DELETE CASCADE
 );
-
-
--- Index by deleted_at
-CREATE INDEX IF NOT EXISTS idx_permissions_deleted_at ON master.permissions (deleted_at);
-
 
 
 CREATE TABLE IF NOT EXISTS master.roles (
@@ -30,7 +24,6 @@ CREATE TABLE IF NOT EXISTS master.roles (
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMPTZ,
     CONSTRAINT pk_roles PRIMARY KEY (id),
     CONSTRAINT uk_roles_company_global_id_name UNIQUE (company_global_id, name),
     CONSTRAINT fk_roles_company_global_id
@@ -38,11 +31,6 @@ CREATE TABLE IF NOT EXISTS master.roles (
         REFERENCES master.company_globals(id)
         ON DELETE CASCADE
 );
-
-
-
--- Index by deleted_at
-CREATE INDEX IF NOT EXISTS idx_roles_deleted_at ON master.roles (deleted_at);
 
 CREATE TABLE IF NOT EXISTS master.roles_permissions (
     role_id BIGINT NOT NULL,
