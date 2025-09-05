@@ -38,6 +38,8 @@ func main() {
 	// Inicializa o validador customizado ANTES de criar a instância do Gin.
 	validator.InitCustomValidator()
 
+	validator.InitSnowflakeValidator()
+
 	// Define o modo do Gin com base na configuração (ex: "release" para produção)
 	gin.SetMode(gin.ReleaseMode)
 	if cfg.AppEnv != "production" {

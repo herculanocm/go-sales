@@ -1,1 +1,8 @@
-GET http://localhost:8081/api/v1/roles?name=te
+POST http://localhost:8081/api/v1/roles
+Content-Type: application/json
+
+{
+	"name": "CAN_EDIT_PARAMS",
+	"companyGlobalID": 1963596246084001792,
+    "permissions": []
+}

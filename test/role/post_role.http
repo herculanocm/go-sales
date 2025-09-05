@@ -1,0 +1,12 @@
+POST http://localhost:8081/api/v1/roles
+Content-Type: application/json
+
+{
+	"name": "ROLE_OTHER2",
+	"companyGlobalID": 1963786332893388800,
+	"permissions": [
+		{
+			"id": 1963786376484790272
+		}
+	]
+}

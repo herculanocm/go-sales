@@ -129,6 +129,18 @@ var (
 		httpStatusCode: http.StatusConflict,
 		code:           "company_global_contacts_field_validation_unique",
 	}
+
+	ErrRoleMustHavePermissions = &AbstractError{
+		error:          "role must have at least one permission",
+		httpStatusCode: http.StatusBadRequest,
+		code:           "role_must_have_permissions",
+	}
+
+	ErrPermissionsNotFound = &AbstractError{
+		error:          "one or more permissions not found or do not belong to the specified company global",
+		httpStatusCode: http.StatusBadRequest,
+		code:           "permissions_not_found",
+	}
 )
 
 func GormDefaultError(err error) ErrorUtil {

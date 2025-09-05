@@ -1,0 +1,21 @@
+PUT http://localhost:8081/api/v1/roles/1963789300929699840
+Content-Type: application/json
+
+{
+    "id": 1963789300929699840,
+    "companyGlobalId": 1963786332893388800,
+	"name": "ROLE_OTHER3",
+	"companyGlobalID": 1963786332893388800,
+	"permissions": [
+		{
+			"id": 1963786376484790272,
+            "name": "PERMISSION_READ",
+            "companyGlobalId": 1963786332893388800
+		},
+        {
+			"id": 1963786376484790272,
+            "name": "PERMISSION_READ",
+            "companyGlobalId": 1963786332893388800
+		}
+	]
+}

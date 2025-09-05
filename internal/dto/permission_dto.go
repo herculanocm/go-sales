@@ -11,10 +11,10 @@ type CreatePermissionDTO struct {
 }
 
 type PermissionDTO struct {
-	ID              int64     `json:"id"`
-	CompanyGlobalID int64     `json:"companyGlobalID"`
-	Name            string    `json:"name"`
-	Description     *string   `json:"description,omitempty"`
+	ID              int64     `json:"id" binding:"required,snowflake"`
+	CompanyGlobalID int64     `json:"companyGlobalID" binding:"required,snowflake"`
+	Name            string    `json:"name" binding:"required,max=255"`
+	Description     *string   `json:"description,omitempty" binding:"omitempty,max=4000"`
 	CreatedAt       time.Time `json:"createdAt"`
 	UpdatedAt       time.Time `json:"updatedAt"`
 }

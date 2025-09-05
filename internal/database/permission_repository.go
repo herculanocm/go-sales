@@ -11,11 +11,12 @@ import (
 type PermissionRepositoryInterface interface {
 	FindByID(id int64) (*model.Permission, error)
 	FindByName(name string, companyGlobalID int64) (*model.Permission, error)
+	ExistsByName(name string, companyGlobalID int64) (bool, error)
 	Create(permission *model.Permission) error
 	Update(permission *model.Permission) error
 	Delete(id int64) error
-	FindAll(filters map[string][]string, page, pageSize int) ([]*model.Permission, int64, error)
-	FindByIDs(ids []int64) ([]*model.Permission, error)
+	FindAll(filters map[string][]string, page, pageSize int, companyGlobalID int64) ([]*model.Permission, int64, error)
+	FindByIDs(ids []int64, companyGlobalID *int64) ([]*model.Permission, error)
 }
 
 // permissionRepository é a implementação concreta que usa o GORM.
@@ -34,6 +35,14 @@ func (r *permissionRepository) FindByID(id int64) (*model.Permission, error) {
 		return nil, err
 	}
 	return &permission, nil
+}
+
+func (r *permissionRepository) ExistsByName(name string, companyGlobalID int64) (bool, error) {
+	var count int64
+	if err := r.db.Model(&model.Permission{}).Where("name = ? AND company_global_id = ?", name, companyGlobalID).Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 func (r *permissionRepository) FindByName(name string, companyGlobalID int64) (*model.Permission, error) {
@@ -64,10 +73,10 @@ func (r *permissionRepository) Delete(id int64) error {
 	return nil
 }
 
-func (r *permissionRepository) FindAll(filters map[string][]string, page, pageSize int) ([]*model.Permission, int64, error) {
+func (r *permissionRepository) FindAll(filters map[string][]string, page, pageSize int, companyGlobalID int64) ([]*model.Permission, int64, error) {
 	var permissions []*model.Permission
 	var totalItems int64
-	query := r.db.Model(&model.Permission{})
+	query := r.db.Model(&model.Permission{}).Where("company_global_id = ?", companyGlobalID)
 
 	allowedFilters := map[string]bool{
 		"name": true,
@@ -95,9 +104,13 @@ func (r *permissionRepository) FindAll(filters map[string][]string, page, pageSi
 	return permissions, totalItems, nil
 }
 
-func (r *permissionRepository) FindByIDs(ids []int64) ([]*model.Permission, error) {
+func (r *permissionRepository) FindByIDs(ids []int64, companyGlobalID *int64) ([]*model.Permission, error) {
+	query := r.db.Where("id IN ?", ids)
+	if companyGlobalID != nil {
+		query = query.Where("company_global_id = ?", *companyGlobalID)
+	}
 	var permissions []*model.Permission
-	if err := r.db.Where("id IN ?", ids).Find(&permissions).Error; err != nil {
+	if err := query.Find(&permissions).Error; err != nil {
 		return nil, err
 	}
 	return permissions, nil

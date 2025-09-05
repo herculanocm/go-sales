@@ -2,6 +2,7 @@ package database
 
 import (
 	"go-sales/internal/model"
+	"go-sales/pkg/util"
 
 	"gorm.io/gorm"
 )
@@ -10,11 +11,12 @@ import (
 type RoleRepositoryInterface interface {
 	FindAllByIDs(roleIDs []int64) ([]*model.Role, error)
 	FindByID(id int64) (*model.Role, error)
-	FindByName(name string) (*model.Role, error)
+	FindByName(name string, companyGlobalID int64) (*model.Role, error)
+	ExistsByName(name string, companyGlobalID int64) (bool, error)
 	Create(role *model.Role) error
 	Update(role *model.Role) error
 	Delete(id int64) error
-	FindAll(filters map[string][]string, page, pageSize int) ([]model.Role, int64, error)
+	FindAll(filters map[string][]string, page, pageSize int, companyGlobalID int64) ([]model.Role, int64, error)
 	AssociatePermissions(role *model.Role, permissions []*model.Permission) error
 }
 
@@ -36,15 +38,24 @@ func (r *roleRepository) FindByID(id int64) (*model.Role, error) {
 	return &role, nil
 }
 
-func (r *roleRepository) FindByName(name string) (*model.Role, error) {
+func (r *roleRepository) ExistsByName(name string, companyGlobalID int64) (bool, error) {
+	var count int64
+	if err := r.db.Model(&model.Role{}).Where("name = ? AND company_global_id = ?", name, companyGlobalID).Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (r *roleRepository) FindByName(name string, companyGlobalID int64) (*model.Role, error) {
 	var role model.Role
-	if err := r.db.Where("name = ?", name).First(&role).Error; err != nil {
+	if err := r.db.Where("name = ? AND company_global_id = ?", name, companyGlobalID).First(&role).Error; err != nil {
 		return nil, err
 	}
 	return &role, nil
 }
 
 func (r *roleRepository) Create(role *model.Role) error {
+	role.ID = util.NewSnowflake()
 	return r.db.Create(role).Error
 }
 
@@ -63,10 +74,10 @@ func (r *roleRepository) Delete(id int64) error {
 	return nil
 }
 
-func (r *roleRepository) FindAll(filters map[string][]string, page, pageSize int) ([]model.Role, int64, error) {
+func (r *roleRepository) FindAll(filters map[string][]string, page, pageSize int, companyGlobalID int64) ([]model.Role, int64, error) {
 	var roles []model.Role
 	var totalItems int64
-	query := r.db.Model(&model.Role{})
+	query := r.db.Model(&model.Role{}).Where("company_global_id = ?", companyGlobalID)
 
 	allowedFilters := map[string]bool{
 		"name": true,

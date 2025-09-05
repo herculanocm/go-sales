@@ -64,3 +64,32 @@ func MapToPermissions(dtos []*dto.CreatePermissionDTO) []*model.Permission {
 	}
 	return permissions
 }
+
+func DTOMapToPermission(dto *dto.PermissionDTO) *model.Permission {
+	if dto == nil {
+		return nil
+	}
+
+	return &model.Permission{
+		ID:              dto.ID,
+		CompanyGlobalID: dto.CompanyGlobalID,
+		Name:            dto.Name,
+		Description:     dto.Description,
+		CreatedAt:       dto.CreatedAt,
+		UpdatedAt:       dto.UpdatedAt,
+	}
+}
+
+func DTOsMapToPermissions(dtos []dto.PermissionDTO) []*model.Permission {
+	if dtos == nil {
+		return nil
+	}
+
+	permissions := make([]*model.Permission, 0, len(dtos))
+	for _, dto := range dtos {
+		if permission := DTOMapToPermission(&dto); permission != nil {
+			permissions = append(permissions, permission)
+		}
+	}
+	return permissions
+}

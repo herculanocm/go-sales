@@ -103,8 +103,14 @@ func (h *PermissionHandler) FindAll(c *gin.Context) {
 	if err != nil || pageSize < 1 {
 		pageSize = h.cfg.AppDefaultAPIPageSize
 	}
+	companyGlobalId, err := strconv.ParseInt(c.Query("company_global_id"), 10, 64)
+	if err != nil {
+		customError := service.NewError("invalid company_global_id format", http.StatusBadRequest, "invalid_company_global_id_format")
+		HandleError(customError, "PermissionHandler.FindAll - Error parsing company_global_id", c)
+		return
+	}
 	filters := c.Request.URL.Query()
-	paginatedResult, customErr := h.service.FindAll(filters, page, pageSize)
+	paginatedResult, customErr := h.service.FindAll(filters, page, pageSize, companyGlobalId)
 	if customErr != nil {
 
 		HandleError(customErr, "PermissionHandler.FindAll error", c)
