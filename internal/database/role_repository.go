@@ -32,7 +32,7 @@ func NewRoleRepository(db *gorm.DB) RoleRepositoryInterface {
 
 func (r *roleRepository) FindByID(id int64) (*model.Role, error) {
 	var role model.Role
-	if err := r.db.Where("id = ?", id).First(&role).Error; err != nil {
+	if err := r.db.Preload("Permissions").Where("id = ?", id).First(&role).Error; err != nil {
 		return nil, err
 	}
 	return &role, nil
@@ -48,7 +48,7 @@ func (r *roleRepository) ExistsByName(name string, companyGlobalID int64) (bool,
 
 func (r *roleRepository) FindByName(name string, companyGlobalID int64) (*model.Role, error) {
 	var role model.Role
-	if err := r.db.Where("name = ? AND company_global_id = ?", name, companyGlobalID).First(&role).Error; err != nil {
+	if err := r.db.Preload("Permissions").Where("name = ? AND company_global_id = ?", name, companyGlobalID).First(&role).Error; err != nil {
 		return nil, err
 	}
 	return &role, nil
@@ -77,7 +77,7 @@ func (r *roleRepository) Delete(id int64) error {
 func (r *roleRepository) FindAll(filters map[string][]string, page, pageSize int, companyGlobalID int64) ([]model.Role, int64, error) {
 	var roles []model.Role
 	var totalItems int64
-	query := r.db.Model(&model.Role{}).Where("company_global_id = ?", companyGlobalID)
+	query := r.db.Preload("Permissions").Model(&model.Role{}).Where("company_global_id = ?", companyGlobalID)
 
 	allowedFilters := map[string]bool{
 		"name": true,
@@ -98,7 +98,7 @@ func (r *roleRepository) FindAll(filters map[string][]string, page, pageSize int
 	}
 
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Find(&roles).Error; err != nil {
+	if err := query.Preload("Permissions").Offset(offset).Limit(pageSize).Find(&roles).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -108,7 +108,7 @@ func (r *roleRepository) FindAll(filters map[string][]string, page, pageSize int
 // Busca todas as roles pelos IDs informados
 func (r *roleRepository) FindAllByIDs(ids []int64) ([]*model.Role, error) {
 	var roles []*model.Role
-	if err := r.db.Where("id IN ?", ids).Find(&roles).Error; err != nil {
+	if err := r.db.Preload("Permissions").Where("id IN ?", ids).Find(&roles).Error; err != nil {
 		return nil, err
 	}
 	return roles, nil

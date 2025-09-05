@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"fmt"
 	"go-sales/internal/config"
 	"go-sales/internal/dto"
@@ -63,7 +62,7 @@ func (h *RoleHandler) Update(c *gin.Context) {
 	}
 
 	updatedRole, errUpdate := h.service.Update(*updateRoleDTO, id)
-	if err != nil {
+	if errUpdate != nil {
 		HandleError(errUpdate, "RoleHandler.Update error", c)
 		return
 	}
@@ -72,23 +71,23 @@ func (h *RoleHandler) Update(c *gin.Context) {
 
 func (h *RoleHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
+	log.Info().Str("role_id", idStr).Msg("Deleting role")
+
 	id, err := util.ParseSnowflake(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
+		HandleError(customError, "RoleHandler.Delete - Error parsing ID", c)
 		return
 	}
 	if err := h.service.Delete(id); err != nil {
-		if errors.Is(err, service.ErrNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+		HandleError(err, "RoleHandler.Delete error", c)
 		return
 	}
 	c.JSON(http.StatusNoContent, nil)
 }
 
 func (h *RoleHandler) FindAll(c *gin.Context) {
+	log.Info().Msg("Fetching all roles")
 	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if err != nil || page < 1 {
 		page = 1
@@ -97,16 +96,16 @@ func (h *RoleHandler) FindAll(c *gin.Context) {
 	if err != nil || pageSize < 1 {
 		pageSize = h.cfg.AppDefaultAPIPageSize
 	}
-	companyGlobalId, err := strconv.ParseInt(c.Query("company_global_id"), 10, 64)
-	if err != nil {
+	companyGlobalId, errParseInt := strconv.ParseInt(c.Query("company_global_id"), 10, 64)
+	if errParseInt != nil {
 		customError := service.NewError("invalid company_global_id format", http.StatusBadRequest, "invalid_company_global_id_format")
 		HandleError(customError, "RoleHandler.FindAll - Error parsing company_global_id", c)
 		return
 	}
 	filters := c.Request.URL.Query()
-	paginatedResult, err := h.service.FindAll(filters, page, pageSize, companyGlobalId)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+	paginatedResult, errFindAll := h.service.FindAll(filters, page, pageSize, companyGlobalId)
+	if errFindAll != nil {
+		HandleError(errFindAll, "RoleHandler.FindAll error", c)
 		return
 	}
 	c.JSON(http.StatusOK, paginatedResult)
@@ -114,18 +113,16 @@ func (h *RoleHandler) FindAll(c *gin.Context) {
 
 func (h *RoleHandler) FindByID(c *gin.Context) {
 	idStr := c.Param("id")
+	log.Info().Str("role_id", idStr).Msg("Fetching role by ID")
 	id, err := util.ParseSnowflake(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		customError := service.NewError(err.Error(), http.StatusBadRequest, "invalid_id_format")
+		HandleError(customError, "RoleHandler.FindByID - Error parsing ID", c)
 		return
 	}
-	role, err := h.service.FindByID(id)
-	if err != nil {
-		if errors.Is(err, service.ErrNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
+	role, errFind := h.service.FindByID(id)
+	if errFind != nil {
+		HandleError(errFind, "RoleHandler.FindByID error", c)
 		return
 	}
 	c.JSON(http.StatusOK, role)

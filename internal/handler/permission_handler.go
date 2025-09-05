@@ -94,8 +94,9 @@ func (h *PermissionHandler) Delete(c *gin.Context) {
 
 // FindAll retorna todas as permissões paginadas.
 func (h *PermissionHandler) FindAll(c *gin.Context) {
-	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
 	log.Info().Msg("Fetching all permissions")
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+
 	if err != nil || page < 1 {
 		page = 1
 	}

@@ -18,9 +18,9 @@ import (
 type RoleServiceInterface interface {
 	Create(roleDTO dto.CreateRoleDTO) (*dto.RoleDTO, ErrorUtil)
 	Update(roleDTO dto.RoleDTO, roleID int64) (*dto.RoleDTO, ErrorUtil)
-	Delete(roleID int64) error
-	FindByID(roleID int64) (*dto.RoleDTO, error)
-	FindAll(filters map[string][]string, page, pageSize int, companyGlobalID int64) (*dto.PaginatedResponse[dto.RoleDTO], error)
+	Delete(roleID int64) ErrorUtil
+	FindByID(roleID int64) (*dto.RoleDTO, ErrorUtil)
+	FindAll(filters map[string][]string, page, pageSize int, companyGlobalID int64) (*dto.PaginatedResponse[dto.RoleDTO], ErrorUtil)
 }
 
 // roleService é a implementação concreta.
@@ -205,29 +205,38 @@ func (s *roleService) Update(roleDTO dto.RoleDTO, roleID int64) (*dto.RoleDTO, E
 	return mapper.MapToRoleDTO(updateRole), nil
 }
 
-func (s *roleService) Delete(roleID int64) error {
+func (s *roleService) Delete(roleID int64) ErrorUtil {
 	err := s.repo.Delete(roleID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ErrNotFound
-		}
-		return err
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to delete role")
+		return GormDefaultError(err)
 	}
 	return nil
 }
 
-func (s *roleService) FindByID(roleID int64) (*dto.RoleDTO, error) {
+func (s *roleService) FindByID(roleID int64) (*dto.RoleDTO, ErrorUtil) {
 	role, err := s.repo.FindByID(roleID)
 	if err != nil {
-		return nil, err
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to find role by ID")
+		return nil, GormDefaultError(err)
 	}
 	return mapper.MapToRoleDTO(role), nil
 }
 
-func (s *roleService) FindAll(filters map[string][]string, page, pageSize int, companyGlobalID int64) (*dto.PaginatedResponse[dto.RoleDTO], error) {
+func (s *roleService) FindAll(filters map[string][]string, page, pageSize int, companyGlobalID int64) (*dto.PaginatedResponse[dto.RoleDTO], ErrorUtil) {
 	roles, totalItems, err := s.repo.FindAll(filters, page, pageSize, companyGlobalID)
 	if err != nil {
-		return nil, err
+		log.Error().
+			Err(err).
+			Caller().
+			Msg("failed to findAll role")
+		return nil, GormDefaultError(err)
 	}
 
 	rolePtrs := make([]*model.Role, len(roles))
