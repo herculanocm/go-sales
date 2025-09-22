@@ -124,7 +124,7 @@ func (s *userService) Create(userDTO dto.CreateUserDTO) (*dto.UserDTO, ErrorUtil
 }
 
 func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*dto.UserDTO, ErrorUtil) {
-	// 1. Buscar o usuário existente.
+	log.Debug().Msgf("Updating user: %+v", userDTO)
 
 	companyGlobalExists, errCompanyGlobalExists := CheckCompanyGlobalExists(s.repoCompany, userDTO.CompanyGlobalID, false)
 	if errCompanyGlobalExists != nil {
@@ -146,26 +146,50 @@ func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*dto.Use
 	if err != nil {
 		// AQUI ESTÁ A TRADUÇÃO DO ERRO!
 		// Se o repositório retornou "record not found", o serviço retorna "ErrNotFound".
+		log.Error().
+			Err(err).
+			Caller().
+			Str("user_id", userID).
+			Msg("failed to find existing user")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
 		// Para qualquer outro erro do banco de dados, apenas repasse.
+		log.Error().
+			Err(err).
+			Caller().
+			Str("user_id", userID).
+			Msg("database error when finding user")
 		return nil, ErrDatabase
 	}
 
 	// A verificação de 'existingUser == nil' se torna redundante se o repositório
 	// já retorna gorm.ErrRecordNotFound, mas não custa manter por segurança.
 	if existingUser == nil {
+		log.Error().
+			Caller().
+			Str("user_id", userID).
+			Msg("failed to find existing user")
 		return nil, ErrNotFound
 	}
 
 	// 2. Verificar se o novo email já está em uso por OUTRO usuário.
 	if userDTO.Email != existingUser.Email {
+		log.Debug().Msgf("Checking if email is already in use: %s", userDTO.Email)
 		userWithNewEmail, err := s.repo.FindByEmail(userDTO.Email)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Error().
+				Err(err).
+				Caller().
+				Str("email", userDTO.Email).
+				Msg("failed to check if email is in use")
 			return nil, ErrDatabase // Erro de banco de dados
 		}
 		if userWithNewEmail != nil {
+			log.Error().
+				Caller().
+				Str("email", userDTO.Email).
+				Msg("email already in use")
 			return nil, ErrEmailInUse
 		}
 	}
@@ -173,9 +197,6 @@ func (s *userService) Update(userDTO dto.CreateUserDTO, userID string) (*dto.Use
 	// 3. Atualizar os campos do usuário.
 	existingUser.Name = userDTO.Name
 	existingUser.Email = userDTO.Email // Atualiza o email
-	if userDTO.Password != "" {
-		// ... (lógica de hashear a senha) ...
-	}
 
 	// 4. Chamar o repositório para persistir as alterações.
 	if err := s.repo.Update(existingUser); err != nil {

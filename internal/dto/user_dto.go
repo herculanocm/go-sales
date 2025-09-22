@@ -16,16 +16,29 @@ type CreateUserDTO struct {
 }
 
 type UserDTO struct {
-	ID            int64            `json:"id"`
-	Name          string           `json:"name"`
-	Email         string           `json:"email"`
-	Password      string           `json:"password"`
-	Enabled       bool             `json:"enabled"`
-	CompanyGlobal CompanyGlobalDTO `json:"companyGlobal"`
-	Roles         []RoleDTO        `json:"roles"`
-	CreatedAt     time.Time        `json:"createdAt"`
-	UpdatedAt     time.Time        `json:"updatedAt"`
-	DeletedAt     time.Time        `json:"deletedAt"`
+	ID              int64            `json:"id"`
+	Name            string           `json:"name"`
+	Email           string           `json:"email"`
+	EmailRecovery   string           `json:"emailRecovery"`
+	EmailVerified   bool             `json:"emailVerified"`
+	EmailVerifiedAt *time.Time       `json:"emailVerifiedAt,omitempty"`
+	Phone           string           `json:"phone"`
+	PhoneVerified   bool             `json:"phoneVerified"`
+	PhoneVerifiedAt *time.Time       `json:"phoneVerifiedAt,omitempty"`
+	Password        *string          `json:"password,omitempty"`
+	Enabled         bool             `json:"enabled"`
+	Actived         bool             `json:"actived"`
+	ActivationKey   *string          `json:"activationKey,omitempty"`
+	ActivatedAt     *time.Time       `json:"activatedAt,omitempty"`
+	ResetKey        *string          `json:"resetKey,omitempty"`
+	ResetRequested  *time.Time       `json:"resetRequested,omitempty"`
+	ResetAt         *time.Time       `json:"resetAt,omitempty"`
+	CompanyGlobalID int64            `json:"companyGlobalId"`
+	CompanyGlobal   CompanyGlobalDTO `json:"companyGlobal"`
+	Roles           []RoleDTO        `json:"roles"`
+	CreatedAt       time.Time        `json:"createdAt"`
+	UpdatedAt       time.Time        `json:"updatedAt"`
+	DeletedAt       *time.Time       `json:"deletedAt,omitempty"`
 }
 
 type UpdateUserDTO struct {
