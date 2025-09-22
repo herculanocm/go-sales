@@ -21,7 +21,7 @@ type UserDTO struct {
 	Email         string           `json:"email"`
 	Password      string           `json:"password"`
 	Enabled       bool             `json:"enabled"`
-	CompanyGlobal CompanyGlobalDTO `json:"company_global"`
+	CompanyGlobal CompanyGlobalDTO `json:"companyGlobal"`
 	Roles         []RoleDTO        `json:"roles"`
 	CreatedAt     time.Time        `json:"createdAt"`
 	UpdatedAt     time.Time        `json:"updatedAt"`

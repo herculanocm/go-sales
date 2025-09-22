@@ -38,18 +38,16 @@ func (s *permissionService) Create(permissionDTO dto.CreatePermissionDTO) (*dto.
 	// Verificar se já existe uma permissão com o mesmo nome
 	permissionDTO.Name = strings.ToUpper(strings.TrimSpace(permissionDTO.Name))
 
-	companyGlobalExists, err := s.repoCompanyGlobal.Exists(permissionDTO.CompanyGlobalID, false)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	companyGlobalExists, errCompanyGlobalExists := CheckCompanyGlobalExists(s.repoCompanyGlobal, permissionDTO.CompanyGlobalID, false)
+	if errCompanyGlobalExists != nil {
 		log.Error().
-			Err(err).
-			Str("company_global_id", strconv.FormatInt(permissionDTO.CompanyGlobalID, 10)).
-			Str("company_global_id", strconv.FormatInt(permissionDTO.CompanyGlobalID, 10)).
+			Err(errCompanyGlobalExists).Str("company_global_id", strconv.FormatInt(permissionDTO.CompanyGlobalID, 10)).
 			Msg("failed to check if company global exists")
-		return nil, GormDefaultError(err)
+		return nil, errCompanyGlobalExists
 	}
 	if !companyGlobalExists {
 		log.Error().
-			Err(err).
+			Err(errCompanyGlobalExists).
 			Caller().
 			Str("company_global_id", strconv.FormatInt(permissionDTO.CompanyGlobalID, 10)).
 			Msg("failed to find existing company global")
@@ -168,6 +166,20 @@ func (s *permissionService) FindByID(permissionID int64) (*dto.PermissionDTO, Er
 }
 
 func (s *permissionService) FindAll(filters map[string][]string, page, pageSize int, companyGlobalID int64) (*dto.PaginatedResponse[dto.PermissionDTO], ErrorUtil) {
+
+	companyExists, errCompanyExists := CheckCompanyGlobalExists(s.repoCompanyGlobal, companyGlobalID, false)
+	if errCompanyExists != nil {
+		log.Error().
+			Err(errCompanyExists).
+			Caller().
+			Str("company_global_id", strconv.FormatInt(companyGlobalID, 10)).
+			Msg("failed to check if company global exists")
+		return nil, errCompanyExists
+	}
+	if !companyExists {
+		return nil, ErrCompanyGlobalNotFound
+	}
+
 	permissions, totalItems, err := s.repo.FindAll(filters, page, pageSize, companyGlobalID)
 	if err != nil {
 		log.Error().

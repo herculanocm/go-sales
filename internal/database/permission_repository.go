@@ -79,13 +79,18 @@ func (r *permissionRepository) FindAll(filters map[string][]string, page, pageSi
 	query := r.db.Model(&model.Permission{}).Where("company_global_id = ?", companyGlobalID)
 
 	allowedFilters := map[string]bool{
-		"name": true,
+		"name":            true,
+		"companyGlobalId": true,
 	}
 
 	for key, value := range filters {
 		if allowed, ok := allowedFilters[key]; ok && allowed && len(value) > 0 {
 			if key == "name" {
 				query = query.Where("name ILIKE ?", "%"+value[0]+"%")
+			} else if key == "companyGlobalId" {
+				// companyGlobalId é a chave estrangeira, então usamos o nome da coluna correta.
+				query = query.Where("company_global_id = ?", value[0])
+
 			} else {
 				query = query.Where(key+" = ?", value[0])
 			}

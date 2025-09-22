@@ -94,7 +94,7 @@ func (h *PermissionHandler) Delete(c *gin.Context) {
 
 // FindAll retorna todas as permissões paginadas.
 func (h *PermissionHandler) FindAll(c *gin.Context) {
-	log.Info().Msg("Fetching all permissions")
+	log.Debug().Msg("Fetching all permissions")
 	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
 
 	if err != nil || page < 1 {
@@ -104,12 +104,18 @@ func (h *PermissionHandler) FindAll(c *gin.Context) {
 	if err != nil || pageSize < 1 {
 		pageSize = h.cfg.AppDefaultAPIPageSize
 	}
-	companyGlobalId, err := strconv.ParseInt(c.Query("company_global_id"), 10, 64)
+	companyGlobalId, err := strconv.ParseInt(c.Query("companyGlobalId"), 10, 64)
 	if err != nil {
-		customError := service.NewError("invalid company_global_id format", http.StatusBadRequest, "invalid_company_global_id_format")
-		HandleError(customError, "PermissionHandler.FindAll - Error parsing company_global_id", c)
+		customError := service.NewError("invalid companyGlobalId format", http.StatusBadRequest, "invalid_company_global_id_format")
+		HandleError(customError, "PermissionHandler.FindAll - Error parsing companyGlobalId", c)
 		return
 	}
+	if companyGlobalId == 0 {
+		customError := service.NewError("companyGlobalId is required", http.StatusBadRequest, "company_global_id_required")
+		HandleError(customError, "PermissionHandler.FindAll - companyGlobalId is required", c)
+		return
+	}
+
 	filters := c.Request.URL.Query()
 	paginatedResult, customErr := h.service.FindAll(filters, page, pageSize, companyGlobalId)
 	if customErr != nil {

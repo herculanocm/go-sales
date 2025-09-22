@@ -5,6 +5,6 @@ Content-Type: application/json
 	"name": "Herculano cunha",
 	"email": "john.doe22@example.com",
 	"password": "securepassword",
-	"company_global_id": "f22d672e-0a7e-42d2-bc0e-e1bdbe9482f2",
-	"role_ids": ["48d5dd62-9b14-4d00-9cdb-00720971cd28", "36a8408c-1b1b-4231-97a3-86a15013ed90"]
+	"companyGlobalId": 1963596246084001792,
+	"roleIds": [1963783084333637632]
 }

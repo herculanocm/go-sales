@@ -2,6 +2,7 @@ package database
 
 import (
 	"go-sales/internal/model"
+	"go-sales/pkg/util"
 
 	"gorm.io/gorm"
 )
@@ -15,7 +16,7 @@ type UserRepositoryInterface interface {
 	Delete(id string) error
 	AssociateRoles(user *model.User, roles []*model.Role) error
 	FindAll(filters map[string][]string, page, pageSize int) ([]model.User, int64, error)
-	EmailExists(email string, company_global_id int64) (bool, error)
+	EmailExists(email string, company_global_id int64, useUnscoped bool) (bool, error)
 }
 
 // userRepository é a implementação concreta que usa o GORM.
@@ -38,9 +39,13 @@ func (r *userRepository) FindByEmail(email string) (*model.User, error) {
 	return &user, nil
 }
 
-func (r *userRepository) EmailExists(email string, company_global_id int64) (bool, error) {
+func (r *userRepository) EmailExists(email string, company_global_id int64, useUnscoped bool) (bool, error) {
 	var count int64
-	if err := r.db.Model(&model.User{}).Where("email_address = ? AND company_global_id = ?", email, company_global_id).Count(&count).Error; err != nil {
+	query := r.db.Model(&model.User{}).Where("email_address = ? AND company_global_id = ?", email, company_global_id)
+	if useUnscoped {
+		query = query.Unscoped()
+	}
+	if err := query.Count(&count).Error; err != nil {
 		return false, err
 	}
 	return count > 0, nil
@@ -48,6 +53,7 @@ func (r *userRepository) EmailExists(email string, company_global_id int64) (boo
 
 // Create salva um novo usuário no banco de dados.
 func (r *userRepository) Create(user *model.User) error {
+	user.ID = util.NewSnowflake()
 	return r.db.Create(user).Error
 }
 
@@ -94,9 +100,11 @@ func (r *userRepository) FindAll(filters map[string][]string, page, pageSize int
 	query := r.db.Model(&model.User{}).Preload("CompanyGlobal").Preload("Roles")
 
 	allowedFilters := map[string]bool{
-		"name":    true,
-		"email":   true,
-		"enabled": true,
+		"name":            true,
+		"email":           true,
+		"enabled":         true,
+		"id":              true,
+		"companyGlobalId": true,
 	}
 
 	for key, value := range filters {
@@ -106,6 +114,10 @@ func (r *userRepository) FindAll(filters map[string][]string, page, pageSize int
 			// Para outros, usamos '=' para buscas exatas.
 			if key == "name" {
 				query = query.Where("name ILIKE ?", "%"+value[0]+"%") // ILIKE é case-insensitive (PostgreSQL)
+			} else if key == "companyGlobalId" {
+				// companyGlobalId é a chave estrangeira, então usamos o nome da coluna correta.
+				query = query.Where("company_global_id = ?", value[0])
+
 			} else {
 				query = query.Where(key+" = ?", value[0])
 			}

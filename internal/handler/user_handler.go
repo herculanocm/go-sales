@@ -28,27 +28,18 @@ func NewUserHandler(s service.UserServiceInterface, cfg *config.Config) *UserHan
 
 // Create é o método do handler para criar um novo usuário.
 func (h *UserHandler) Create(c *gin.Context) {
-	validatedDTO, exists := c.Get("validatedDTO")
-	if !exists {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Validated DTO not found"})
+	log.Info().Msg("Creating a new user")
+
+	create, utilError := GetValidatedDTO[*dto.CreateUserDTO](c, "validatedDTO")
+	if utilError != nil {
+		log.Error().Err(utilError).Caller().Msg("UserHandler.Create - Error getting validated DTO")
+		HandleError(utilError, "UserHandler.Create - Error getting validated DTO", c)
 		return
 	}
 
-	// Faz a asserção de tipo
-	createUserDTO, ok := validatedDTO.(*dto.CreateUserDTO)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid DTO type"})
-		return
-	}
-
-	// 2. Chamar a Camada de Serviço
-	createdUser, err := h.service.Create(*createUserDTO)
+	createdUser, err := h.service.Create(*create)
 	if err != nil {
-		log.Error().
-			Str("error_code", err.Code()). // imprime o código do erro, que você define em cada erro
-			Err(err).
-			Msg("UserHandler.Create error")
-		c.JSON(err.HTTPStatusCode(), gin.H{"error": err.Error(), "code": err.Code()})
+		HandleError(err, "UserHandler.Create error", c)
 		return
 	}
 
@@ -105,6 +96,7 @@ func (h *UserHandler) Delete(c *gin.Context) {
 }
 
 func (h *UserHandler) FindAll(c *gin.Context) {
+	log.Debug().Msg("Finding all users")
 	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if err != nil || page < 1 {
 		page = 1
@@ -114,16 +106,26 @@ func (h *UserHandler) FindAll(c *gin.Context) {
 	if err != nil || pageSize < 1 {
 		pageSize = h.cfg.AppDefaultAPIPageSize
 	}
-
-	// 2. Extrai os filtros.
 	filters := c.Request.URL.Query()
 
-	// 2. Chamar a Camada de Serviço, passando os filtros.
-	// 3. Chama o serviço.
-	paginatedResult, err := h.service.FindAll(filters, page, pageSize)
-	if customErr, ok := err.(service.ErrorUtil); ok {
-		c.JSON(customErr.HTTPStatusCode(), gin.H{"error": customErr.Error(), "code": customErr.Code()})
+	companyGlobalId, err := strconv.ParseInt(c.Query("companyGlobalId"), 10, 64)
+	if err != nil {
+		customError := service.NewError("invalid companyGlobalId format", http.StatusBadRequest, "invalid_company_global_id_format")
+		HandleError(customError, "PermissionHandler.FindAll - Error parsing companyGlobalId", c)
 		return
+	}
+	if companyGlobalId == 0 {
+		customError := service.NewError("companyGlobalId is required", http.StatusBadRequest, "company_global_id_required")
+		HandleError(customError, "PermissionHandler.FindAll - companyGlobalId is required", c)
+		return
+	}
+
+	paginatedResult, customErr := h.service.FindAll(filters, page, pageSize, companyGlobalId)
+	if customErr != nil {
+
+		HandleError(customErr, "UserHandler.FindAll error", c)
+		return
+
 	}
 
 	// 4. Retorna o resultado paginado.

@@ -34,3 +34,19 @@ func MapToUserDTOs(users []*model.User) *[]dto.UserDTO {
 	}
 	return &userDTOs
 }
+
+func MapCreateUserDTOToUser(userDTO *dto.CreateUserDTO, hashedPassword string, companyGlobal *model.CompanyGlobal, roles []*model.Role) *model.User {
+	if userDTO == nil {
+		return nil
+	}
+
+	return &model.User{
+		Name:            userDTO.Name,
+		Email:           userDTO.Email,
+		Password:        hashedPassword,
+		Enabled:         false,
+		CompanyGlobalID: userDTO.CompanyGlobalID,
+		CompanyGlobal:   *companyGlobal,
+		Roles:           roles,
+	}
+}

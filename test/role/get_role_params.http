@@ -1,1 +1,1 @@
-GET http://localhost:8081/api/v1/roles?company_global_id=1963786332893388800
+GET http://localhost:8081/api/v1/roles?companyGlobalId=1963596246084001792

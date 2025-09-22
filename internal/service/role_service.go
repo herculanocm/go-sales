@@ -230,6 +230,20 @@ func (s *roleService) FindByID(roleID int64) (*dto.RoleDTO, ErrorUtil) {
 }
 
 func (s *roleService) FindAll(filters map[string][]string, page, pageSize int, companyGlobalID int64) (*dto.PaginatedResponse[dto.RoleDTO], ErrorUtil) {
+
+	companyExists, errCompanyExists := CheckCompanyGlobalExists(s.repoCompanyGlobal, companyGlobalID, false)
+	if errCompanyExists != nil {
+		log.Error().
+			Err(errCompanyExists).
+			Caller().
+			Str("company_global_id", strconv.FormatInt(companyGlobalID, 10)).
+			Msg("failed to check if company global exists")
+		return nil, errCompanyExists
+	}
+	if !companyExists {
+		return nil, ErrCompanyGlobalNotFound
+	}
+
 	roles, totalItems, err := s.repo.FindAll(filters, page, pageSize, companyGlobalID)
 	if err != nil {
 		log.Error().
